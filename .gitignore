@@ -4,3 +4,5 @@ env/
 
 # Environment Variables & Secrets (VERY IMPORTANT)
 .env
+
+db.sqlite3
