@@ -4,33 +4,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    {% load static %}
     <title>EmailVerify Pro</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <link rel="stylesheet" href="static/css/home.css">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
 </head>
 
 <body>
 
     <header class="navbar">
   <div class="logo">
-    <img src="/bg removed.png" class="logo-img">
+    <img src="{% static 'bg removed.png' %}" class="logo-img">
   </div>
 
   <!-- DESKTOP NAV -->
   <div class="right-side desktop-menu">
     <nav class="nav-links">
-      <a href="home.html">Home</a>
-      <a href="/Upload page/upload.html">Upload</a>
-      <a href="/Result page/verification-results.html">Results</a>
-      <a href="/admin/admin.html">Admin Dashboard</a>
+      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'upload' %}">Upload</a>
+      <a href="{% url 'verification_results' %}">Results</a>
+      <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
     </nav>
 
     <div class="nav-buttons">
-      <a href="./login.html" class="login-btn">Login</a>
-      <a href="./signup.html" class="primary-btn">Get Started</a>
+      <a href="{% url 'login' %}" class="login-btn">Login</a>
+      <a href="{% url 'signup' %}" class="primary-btn">Get Started</a>
     </div>
   </div>
 
@@ -42,12 +42,12 @@
 
 <!-- MOBILE DROPDOWN MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="home.html">Home</a>
-  <a href="/Upload page/upload.html">Upload</a>
-  <a href="/Result page/verification-results.html">Results</a>
-  <a href="/admin/admin.html">Admin Dashboard</a>
-  <a href="./home.html">Login</a>
-  <a href="./signup.html">Get Started</a>
+  <a href="{% url 'home' %}">Home</a>
+  <a href="{% url 'upload' %}">Upload</a>
+  <a href="{% url 'verification_results' %}">Results</a>
+  <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+  <a href="{% url 'login' %}">Login</a>
+  <a href="{% url 'signup' %}">Get Started</a>
 </div>
 
 <div class="container">
@@ -65,7 +65,7 @@
             </p>
 
             <div class="hero-buttons">
-                <a href="./signup.html" class="primary-btn">Get Started</a>
+                <a href="{% url 'signup' %}" class="primary-btn">Get Started</a>
 
                 <button class="secondary-btn">View Dashboard</button>
             </div>
@@ -80,7 +80,7 @@
                 <div class="row green"></div>
                 <div class="row red"></div>
                 <div class="row green"></div>
-                <a href="./login.html" class="mock-btn"></a>
+                <a href="{% url 'login' %}" class="mock-btn"></a>
 
             </div>
         </div>
@@ -221,7 +221,7 @@
                     </li>
                 </ul>
 
-                <a href="./signup.html">
+                <a href="{% url 'signup' %}">
                     <button class="download-btn">Get Started</button>
                 </a>
 
@@ -243,7 +243,7 @@
 
             <!-- Brand Section -->
             <div class="footer-brand">
-                <img src="/images/bg removed.png" alt="Graphura Logo" class="footer-logo">
+                <img src="{% static 'bg removed.png' %}" alt="Graphura Logo" class="footer-logo">
 
                 <p>
                     Graphura is a smart digital platform delivering reliable
@@ -271,10 +271,10 @@
             <div class="footer-links">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="home.html">Home</a></li>
-                    <li><a href="/Upload page/upload.html">Upload</a></li>
-                    <li><a href="/Result page/verification-results.html">Result</a></li>
-                    <li><a href="/admin/admin.html">Admin Dashboard</a></li>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'upload' %}">Upload</a></li>
+                    <li><a href="{% url 'verification_results' %}">Result</a></li>
+                    <li><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
                 </ul>
             </div>
 
@@ -303,14 +303,14 @@
 
         <!-- Bottom Section -->
         <div class="footer-bottom">
-            <p>© 2025 Graphura India Private Limited. All Rights Reserved.</p>
+            <p> 2025 Graphura India Private Limited. All Rights Reserved.</p>
 
             <div class="footer-policy">
-                <a href="./privacy.html">Privacy Policy</a>
+                <a href="{% url 'privacy' %}">Privacy Policy</a>
                 <span>|</span>
-                <a href="./termandcondition.html">Terms & Conditions</a>
+                <a href="{% url 'terms' %}">Terms & Conditions</a>
                 <span>|</span>
-                <a href="./cookie.html">Cookie Policy</a>
+                <a href="{% url 'cookie' %}">Cookie Policy</a>
             </div>
         </div>
 

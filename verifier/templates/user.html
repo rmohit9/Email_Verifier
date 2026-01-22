@@ -2,12 +2,13 @@
 <html lang="en" class="light">
 <head>
   <meta charset="UTF-8" />
+  {% load static %}
   <title>Admin Management</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <link rel="stylesheet" href="./admin.css">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 </head>
 
 <body class="bg-slate-100 flex h-screen overflow-hidden">
@@ -15,14 +16,14 @@
 <!-- SIDEBAR -->
 <aside class="w-64 bg-white border-r p-6 flex flex-col">
   <div class="mb-8 flex justify-center">
-    <img src="/bg removed.png" class="h-10 object-contain" />
+    <img src="{% static 'bg removed.png' %}" class="h-10 object-contain" />
   </div>
 
   <nav class="flex flex-col gap-2">
-    <a href="admin.html" class="sidebar-link">Dashboard</a>
-    <a href="users.html" class="sidebar-link active">Users</a>
-    <a href="logs.html" class="sidebar-link">Logs</a>
-    <a href="settings.html" class="sidebar-link">Settings</a>
+    <a href="{% url 'admin_dashboard' %}" class="sidebar-link">Dashboard</a>
+    <a href="{% url 'user_dashboard' %}" class="sidebar-link active">Users</a>
+    <a href="{% url 'logs' %}" class="sidebar-link">Logs</a>
+    <a href="{% url 'settings' %}" class="sidebar-link">Settings</a>
   </nav>
 </aside>
 
@@ -37,7 +38,7 @@
     </div>
 
     <!-- TOP RIGHT IMAGE -->
-    <img src="/bg removed.png" class="h-10 object-contain" />
+    <img src="{% static 'bg removed.png' %}" class="h-10 object-contain" />
   </header>
 
   <!-- ACTION BAR -->
@@ -69,6 +70,6 @@
 
 </main>
 
-<script src="./users.js"></script>
+<script src="{% static 'js/user.js' %}"></script>
 </body>
 </html>

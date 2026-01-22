@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  {% load static %}
   <title>Login | EmailVerify Pro</title>
 
   <!-- Font Awesome -->
@@ -13,8 +13,7 @@
   />
 
   <!-- CSS -->
-
-  <link rel="stylesheet" href="/css/login.css">
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
 
@@ -23,7 +22,7 @@
 
     <!-- Left Section -->
     <div class="login-left">
-      <img src="/images/register.jpg" alt="Register Illustration" class="login-illustration">
+      <img src="{% static 'register.jpg' %}" alt="Register Illustration" class="login-illustration">
     </div>
 
     <!-- Right Section -->
@@ -52,7 +51,7 @@
 
         <p class="signup-text">
           Don’t have an account?
-          <a href="signup.html">Create one</a>
+          <a href="{% url 'signup' %}">Create one</a>
         </p>
       </form>
     </div>

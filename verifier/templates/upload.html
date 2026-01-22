@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% load static %}
     <title>VerifEye – Upload Email List</title>
 
     <!-- Fonts -->
@@ -19,7 +20,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="./upload.css" />
+    <link rel="stylesheet" href="{% static 'css/upload.css' %}" />
   </head>
 
   <body class="bg-slate-50 font-display text-slate-700">
@@ -27,21 +28,21 @@
     <header class="navbar">
       <div class="logo">
         <img
-          src="/bg removed.png"
+          src="{% static 'bg removed.png' %}"
           alt="EmailVerify Pro Logo"
           class="logo-img"
         />
       </div>
 
       <nav>
-        <a href="/Home/home.html">Home</a>
-        <a href="/Result page/verification-results.html">Results</a>
-        <a href="/admin/admin.html">Admin Dashboard</a>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'verification_results' %}">Results</a>
+        <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
       </nav>
 
       <div class="nav-buttons">
-        <button class="login-btn">Login</button>
-        <button class="primary-btn">Get Started</button>
+        <a href="{% url 'login' %}" class="login-btn">Login</a>
+        <a href="{% url 'signup' %}" class="primary-btn">Get Started</a>
       </div>
     </header>
 
@@ -155,6 +156,6 @@
       </div>
     </main>
 
-    <script src="./upload.js"></script>
+    <script src="{% static 'js/upload.js' %}"></script>
   </body>
 </html>

@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  {% load static %}
   <title>Verification Results – VerifyPro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./result.css">
+  <link rel="stylesheet" href="{% static 'css/result.css' %}">
 </head>
 
 <body class="bg-slate-50 font-display text-slate-700">
@@ -15,20 +16,20 @@
 <!-- NAVBAR -->
     <header class="navbar">
         <div class="logo">
-    <img src="/bg removed.png" alt="EmailVerify Pro Logo" class="logo-img">
+    <img src="{% static 'bg removed.png' %}" alt="EmailVerify Pro Logo" class="logo-img">
     
 </div>
 
 
         <nav>
-            <a href="/Home/home.html">Home</a>
-            <a href="/Upload page/upload.html">Upload</a>
-            <a href="/admin/admin.html">Admin Dashboard</a>
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'upload' %}">Upload</a>
+            <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
         </nav>
 
         <div class="nav-buttons">
-            <button class="login-btn">Login</button>
-            <button class="primary-btn">Get Started</button>
+            <a href="{% url 'login' %}" class="login-btn">Login</a>
+            <a href="{% url 'signup' %}" class="primary-btn">Get Started</a>
         </div>
     </header>
 
@@ -119,6 +120,6 @@
 
 </main>
 
-<script src="./result.js"></script>
+<script src="{% static 'js/result.js' %}"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 <html lang="en" class="light">
 <head>
   <meta charset="UTF-8" />
+  {% load static %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>VerifyPro – Admin Dashboard</title>
 
@@ -13,7 +14,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="./admin.css">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 </head>
 
 <body class="bg-slate-100 font-display flex h-screen overflow-hidden">
@@ -24,14 +25,14 @@
   <!-- LOGO -->
   <div class="mb-8 flex justify-center">
     <!-- ADD YOUR GRAPHURA LOGO HERE -->
-    <img src="/bg removed.png" alt="Logo" class="h-12 object-contain">
+    <img src="{% static 'bg removed.png' %}" alt="Logo" class="h-12 object-contain">
   </div>
 
   <nav class="flex flex-col gap-2">
-    <a href="./admin.html" class="sidebar-link active">Dashboard</a>
-    <a href="./user.html" class="sidebar-link">Users</a>
-    <a href="./logs.html" class="sidebar-link">Logs</a>
-    <a href="./settings.html" class="sidebar-link">Settings</a>
+    <a href="{% url 'admin_dashboard' %}" class="sidebar-link active">Dashboard</a>
+    <a href="{% url 'user_dashboard' %}" class="sidebar-link">Users</a>
+    <a href="{% url 'logs' %}" class="sidebar-link">Logs</a>
+    <a href="{% url 'settings' %}" class="sidebar-link">Settings</a>
   </nav>
 
   <div class="mt-auto text-sm text-slate-500">

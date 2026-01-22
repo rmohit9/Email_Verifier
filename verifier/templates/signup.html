@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Account | Graphura</title>
-  <link rel="stylesheet" href="/css/signup.css">
+  {% load static %}
+  <title>Create Account | Graphura</title>
+  <link rel="stylesheet" href="{% static 'css/signup.css' %}">
 </head>
 <body>
 
@@ -17,7 +18,7 @@
       <!-- Left Section -->
       <!-- Left Section -->
 <div class="signup-left">
-  <img src="/images/register.jpg" alt="Register Illustration" class="register-illustration">
+  <img src="{% static 'register.jpg' %}" alt="Register Illustration" class="register-illustration">
 </div>
 
 
@@ -48,14 +49,14 @@
 
           <div class="terms">
             <input type="checkbox">
-            <span>I agree to the <a href="./termandcondition.html">Terms & Conditions</a></span>
+            <span>I agree to the <a href="{% url 'terms' %}">Terms & Conditions</a></span>
           </div>
 
           <button class="btn">Create Account</button>
 
           <p class="login-link">
             Already have an account?
-            <a href="./login.html">Login</a>
+            <a href="{% url 'login' %}">Login</a>
           </p>
         </form>
       </div>
