@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Management</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="./admin.css">
+</head>
+
+<body class="bg-slate-100 flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-white border-r p-6 flex flex-col">
+  <div class="mb-8 flex justify-center">
+    <img src="/bg removed.png" class="h-10 object-contain" />
+  </div>
+
+  <nav class="flex flex-col gap-2">
+    <a href="admin.html" class="sidebar-link">Dashboard</a>
+    <a href="users.html" class="sidebar-link active">Users</a>
+    <a href="logs.html" class="sidebar-link">Logs</a>
+    <a href="settings.html" class="sidebar-link">Settings</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 overflow-y-auto p-8">
+
+  <!-- HEADER -->
+  <header class="flex justify-between items-center mb-8">
+    <div>
+      <h2 class="text-3xl font-bold">Admin Management</h2>
+      <p class="text-slate-500">Add, manage, and remove admins</p>
+    </div>
+
+    <!-- TOP RIGHT IMAGE -->
+    <img src="/bg removed.png" class="h-10 object-contain" />
+  </header>
+
+  <!-- ACTION BAR -->
+  <div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold">All Admins</h3>
+    <button
+      onclick="openAddAdminModal()"
+      class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
+      + Add Admin
+    </button>
+  </div>
+
+  <!-- ADMINS TABLE -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-500">
+        <tr>
+          <th class="p-4 text-left">Name</th>
+          <th class="p-4 text-left">Email</th>
+          <th class="p-4 text-left">Status</th>
+          <th class="p-4 text-right">Action</th>
+        </tr>
+      </thead>
+
+      <!-- Backend populated -->
+      <tbody id="adminsTable"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<script src="./users.js"></script>
+</body>
+</html>

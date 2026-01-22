@@ -1,0 +1,155 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Body – */
+body {
+  background: #f8fafc;
+  padding: 40px 16px;
+}
+
+/* Desktop  */
+.page-container {
+  display: flex;
+  justify-content: center;
+}
+
+
+/* Card */
+
+.signup-card {
+  width: 900px;
+  background: #fff;
+  border-radius: 16px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+/* Left */
+
+
+.signup-left {
+  width: 45%;
+  background: #eaf1ff;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-illustration {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Right */
+.signup-right {
+  width: 55%;
+  padding: 20px;
+}
+
+.signup-right h3 {
+  font-size: 22px;
+  margin-bottom: 24px;
+  color: #0f172a;
+}
+
+/* Fields */
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  font-size: 13px;
+  color: #475569;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Terms */
+.terms {
+  font-size: 13px;
+  margin: 16px 0;
+}
+
+.terms a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+/* Button */
+.btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #1d4ed8;
+}
+
+/* Login link */
+.login-link {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.login-link a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+
+  .signup-card {
+    flex-direction: column;
+    width: 95%;
+  }
+
+  .signup-left,
+  .signup-right {
+    width: 100%;
+  }
+
+  .signup-left {
+    order: 2;
+  }
+
+  .signup-right {
+    order: 1;
+    padding: 24px;
+  }
+
+  .register-illustration {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+}
+

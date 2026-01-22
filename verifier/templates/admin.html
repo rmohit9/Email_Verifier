@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VerifyPro – Admin Dashboard</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="./admin.css">
+</head>
+
+<body class="bg-slate-100 font-display flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-white border-r p-6 flex flex-col">
+
+  <!-- LOGO -->
+  <div class="mb-8 flex justify-center">
+    <!-- ADD YOUR GRAPHURA LOGO HERE -->
+    <img src="/bg removed.png" alt="Logo" class="h-12 object-contain">
+  </div>
+
+  <nav class="flex flex-col gap-2">
+    <a href="./admin.html" class="sidebar-link active">Dashboard</a>
+    <a href="./user.html" class="sidebar-link">Users</a>
+    <a href="./logs.html" class="sidebar-link">Logs</a>
+    <a href="./settings.html" class="sidebar-link">Settings</a>
+  </nav>
+
+  <div class="mt-auto text-sm text-slate-500">
+    <span id="adminName">Super Admin</span><br>
+    <span class="text-xs">Super Admin</span>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 overflow-y-auto p-8">
+
+  <!-- HEADER -->
+  <header class="mb-8 flex justify-between items-center">
+    <div>
+      <h2 class="text-3xl font-bold">Admin Management</h2>
+      <p class="text-slate-500">Add, manage, and remove admins</p>
+    </div>
+
+    <!-- ADD ADMIN BUTTON -->
+    <button id="openAddAdmin"
+      class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700">
+      + Add Admin
+    </button>
+  </header>
+
+  <!-- ADMIN TABLE -->
+  <section class="bg-white rounded-xl p-6">
+    <h3 class="font-bold mb-4">All Admins</h3>
+
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-500">
+        <tr>
+          <th class="text-left py-2">Name</th>
+          <th class="text-left py-2">Email</th>
+          <th class="text-left py-2">Status</th>
+          <th class="text-right py-2">Action</th>
+        </tr>
+      </thead>
+      <tbody id="adminTable">
+        <!-- Admin rows will be added later -->
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<!-- ================= ADD ADMIN MODAL ================= -->
+<div id="addAdminModal"
+  class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+
+  <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-lg">
+
+    <h3 class="text-xl font-bold mb-4">Add New Admin</h3>
+
+    <!-- Admin Name -->
+    <div class="mb-4">
+      <label class="text-sm font-medium">Admin Name</label>
+      <input id="adminNameInput" type="text"
+        class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+        placeholder="Enter full name">
+    </div>
+
+    <!-- Mobile -->
+    <div class="mb-4">
+      <label class="text-sm font-medium">Mobile Number</label>
+      <input id="adminMobileInput" type="tel"
+        class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+        placeholder="10 digit mobile number">
+    </div>
+
+    <!-- Email -->
+    <div class="mb-4">
+      <label class="text-sm font-medium">Gmail</label>
+      <input id="adminEmailInput" type="email"
+        class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+        placeholder="example@gmail.com">
+    </div>
+
+    <!-- Auto ID -->
+    <div class="mb-6">
+      <label class="text-sm font-medium">Admin ID</label>
+      <input id="adminIdInput" type="text" readonly
+        class="w-full mt-1 px-3 py-2 bg-slate-100 border rounded-lg text-slate-600">
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex justify-end gap-3">
+      <button id="closeModal"
+        class="px-4 py-2 rounded-lg border text-slate-600 hover:bg-slate-100">
+        Cancel
+      </button>
+
+      <button id="createAdminBtn" disabled
+        class="px-5 py-2 rounded-lg font-semibold bg-indigo-600 text-white opacity-50 cursor-not-allowed">
+        Create Admin
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+/* ADD ADMIN MODAL LOGIC */
+
+const openBtn = document.getElementById("openAddAdmin");
+const modal = document.getElementById("addAdminModal");
+const closeBtn = document.getElementById("closeModal");
+
+const nameInput = document.getElementById("adminNameInput");
+const mobileInput = document.getElementById("adminMobileInput");
+const emailInput = document.getElementById("adminEmailInput");
+const idInput = document.getElementById("adminIdInput");
+const createBtn = document.getElementById("createAdminBtn");
+
+/* Open modal */
+openBtn.addEventListener("click", () => {
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+  // TEMP ID (backend will replace)
+  idInput.value = "ADM-" + Math.floor(100000 + Math.random() * 900000);
+});
+
+/* Close modal */
+closeBtn.addEventListener("click", closeModal);
+
+function closeModal() {
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+  resetForm();
+}
+
+/* Validation */
+function validateForm() {
+  const nameValid = nameInput.value.trim().length >= 3;
+  const mobileValid = /^[0-9]{10}$/.test(mobileInput.value);
+  const emailValid = emailInput.value.endsWith("@gmail.com");
+
+  if (nameValid && mobileValid && emailValid) {
+    createBtn.disabled = false;
+    createBtn.classList.remove("opacity-50", "cursor-not-allowed");
+  } else {
+    createBtn.disabled = true;
+    createBtn.classList.add("opacity-50", "cursor-not-allowed");
+  }
+}
+
+[nameInput, mobileInput, emailInput].forEach(i =>
+  i.addEventListener("input", validateForm)
+);
+
+/* Create admin */
+createBtn.addEventListener("click", () => {
+  alert(
+    `Admin Created!\n\nName: ${nameInput.value}\nEmail: ${emailInput.value}\nAdmin ID: ${idInput.value}`
+  );
+  closeModal();
+});
+
+/* Reset */
+function resetForm() {
+  nameInput.value = "";
+  mobileInput.value = "";
+  emailInput.value = "";
+  idInput.value = "";
+  createBtn.disabled = true;
+  createBtn.classList.add("opacity-50", "cursor-not-allowed");
+}
+</script>
+
+</body>
+</html>

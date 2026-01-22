@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VerifEye – Upload Email List</title>
+
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700;800&family=Noto+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./upload.css" />
+  </head>
+
+  <body class="bg-slate-50 font-display text-slate-700">
+    <!-- NAVBAR -->
+    <header class="navbar">
+      <div class="logo">
+        <img
+          src="/bg removed.png"
+          alt="EmailVerify Pro Logo"
+          class="logo-img"
+        />
+      </div>
+
+      <nav>
+        <a href="/Home/home.html">Home</a>
+        <a href="/Result page/verification-results.html">Results</a>
+        <a href="/admin/admin.html">Admin Dashboard</a>
+      </nav>
+
+      <div class="nav-buttons">
+        <button class="login-btn">Login</button>
+        <button class="primary-btn">Get Started</button>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="max-w-4xl mx-auto px-6 py-10">
+      <!-- TITLE -->
+      <div class="mb-10">
+        <h2 class="text-4xl font-extrabold text-slate-900 mb-2">
+          Upload Email List
+        </h2>
+        <p class="text-slate-500 text-lg">
+          Import your customer data to begin the cleaning process. CSV and TXT
+          supported.
+        </p>
+      </div>
+
+      <!-- CARD -->
+      <section class="card">
+        <!-- TABS -->
+        <div class="tabs">
+          <button class="tab active" id="uploadTab">
+            <span class="material-symbols-outlined">upload_file</span>
+            Upload File
+          </button>
+          <button class="tab" id="pasteTab">
+            <span class="material-symbols-outlined">edit_note</span>
+            Paste Emails
+          </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="p-8">
+          <!-- UPLOAD SECTION -->
+          <div id="uploadSection">
+            <label class="upload-box">
+              <input type="file" id="fileInput" hidden accept=".csv,.txt" />
+              <div class="upload-content">
+                <div class="upload-icon">
+                  <span class="material-symbols-outlined">cloud_upload</span>
+                </div>
+                <p class="upload-title">Click to upload or drag and drop</p>
+                <p class="upload-sub">CSV or TXT (max. 50MB)</p>
+              </div>
+            </label>
+
+            <div id="fileInfo" class="hidden mt-6">
+              <div class="file-row">
+                <div class="file-left">
+                  <span class="material-symbols-outlined text-indigo-600">
+                    description
+                  </span>
+                  <div>
+                    <p id="fileName" class="file-name"></p>
+                    <p id="fileMeta" class="file-meta"></p>
+                  </div>
+                </div>
+                <button id="removeFile">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+
+              <div class="progress-bar">
+                <div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASTE SECTION -->
+          <div id="pasteSection" class="hidden">
+            <textarea
+              id="emailTextarea"
+              class="paste-textarea"
+              placeholder="Please paste your emails here (one per line)"
+            ></textarea>
+
+            <p id="emailCount" class="email-count">0 emails detected</p>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="card-footer">
+          <div class="job-id-box">
+            <p class="job-id-label">JOB ID</p>
+            <p id="jobId" class="job-id-value">—</p>
+          </div>
+
+          <button class="start-btn" id="startVerificationBtn">
+            Start Verification
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- FEATURES -->
+      <div class="grid md:grid-cols-3 gap-6 mt-12">
+        <div class="feature">
+          <span class="material-symbols-outlined">shield</span>
+          <h3>Enterprise Security</h3>
+          <p>Your data is encrypted at rest and in transit.</p>
+        </div>
+        <div class="feature">
+          <span class="material-symbols-outlined">check_circle</span>
+          <h3>99.9% Accuracy</h3>
+          <p>Multi-step verification ensures deliverability.</p>
+        </div>
+        <div class="feature">
+          <span class="material-symbols-outlined">bolt</span>
+          <h3>Real-time Results</h3>
+          <p>Watch your list get cleaned in real-time.</p>
+        </div>
+      </div>
+    </main>
+
+    <script src="./upload.js"></script>
+  </body>
+</html>

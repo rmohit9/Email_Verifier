@@ -1,0 +1,6 @@
+# Virtual Environment
+venv/
+env/
+
+# Environment Variables & Secrets (VERY IMPORTANT)
+.env

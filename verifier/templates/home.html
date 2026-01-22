@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>EmailVerify Pro</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <link rel="stylesheet" href="static/css/home.css">
+</head>
+
+<body>
+
+    <header class="navbar">
+  <div class="logo">
+    <img src="/bg removed.png" class="logo-img">
+  </div>
+
+  <!-- DESKTOP NAV -->
+  <div class="right-side desktop-menu">
+    <nav class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="/Upload page/upload.html">Upload</a>
+      <a href="/Result page/verification-results.html">Results</a>
+      <a href="/admin/admin.html">Admin Dashboard</a>
+    </nav>
+
+    <div class="nav-buttons">
+      <a href="./login.html" class="login-btn">Login</a>
+      <a href="./signup.html" class="primary-btn">Get Started</a>
+    </div>
+  </div>
+
+  <!-- HAMBURGER -->
+  <div class="hamburger" onclick="toggleMenu()">
+    ☰
+  </div>
+</header>
+
+<!-- MOBILE DROPDOWN MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="home.html">Home</a>
+  <a href="/Upload page/upload.html">Upload</a>
+  <a href="/Result page/verification-results.html">Results</a>
+  <a href="/admin/admin.html">Admin Dashboard</a>
+  <a href="./home.html">Login</a>
+  <a href="./signup.html">Get Started</a>
+</div>
+
+<div class="container">
+
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-left">
+            <h1>Professional Email<br>Verification Engine</h1>
+
+            <p>
+                Bulk verify your email lists in real-time with enterprise-grade
+                precision. Stop bounces before they happen and protect your
+                sender reputation.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="./signup.html" class="primary-btn">Get Started</a>
+
+                <button class="secondary-btn">View Dashboard</button>
+            </div>
+
+            <div class="note">
+                ✔ No credit card required for trial
+            </div>
+        </div>
+
+        <div class="hero-right">
+            <div class="mockup">
+                <div class="row green"></div>
+                <div class="row red"></div>
+                <div class="row green"></div>
+                <a href="./login.html" class="mock-btn"></a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS SECTION -->
+    <section class="stats">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">⚡</div>
+                <span class="stat-title">Processing Speed</span>
+            </div>
+            <div class="stat-value">
+                10k+ <span>/min</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">🛡</div>
+                <span class="stat-title">Accuracy Rate</span>
+            </div>
+            <div class="stat-value">
+                99%
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">🏢</div>
+                <span class="stat-title">Companies Trusted</span>
+            </div>
+            <div class="stat-value">
+                500+
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- TECHNOLOGY SECTION -->
+    <section class="technology">
+        <span class="tech-badge">TECHNOLOGY</span>
+        <h2>Real-time Verification Checks</h2>
+        <p class="tech-subtext">
+            Our engine runs comprehensive checks to ensure your email list is clean
+            and deliverable.
+        </p>
+
+        <div class="tech-cards">
+            <div class="tech-card">
+                <div class="tech-icon">⟷</div>
+                <h3>Syntax Check</h3>
+                <p>Validates email formatting standards against RFC definitions.</p>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon">🌐</div>
+                <h3>DNS/MX Lookup</h3>
+                <p>Confirms domain and mail server existence in real-time.</p>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon">✉</div>
+                <h3>SMTP Verification</h3>
+                <p>Pings mailboxes safely without sending an actual email.</p>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-icon">🗑</div>
+                <h3>Disposable Detection</h3>
+                <p>Identifies temporary and burner addresses instantly.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- BENEFITS SECTION -->
+    <section class="benefits">
+        <div class="benefits-left">
+            <h2>Benefits for Your Business</h2>
+            <p class="benefits-subtext">
+                Maximize your marketing ROI by maintaining a healthy sender
+                reputation. Clean lists mean better engagement.
+            </p>
+
+            <div class="benefit-item">
+                <span class="benefit-icon">📉</span>
+                <div>
+                    <h4>Reduce Bounce Rate</h4>
+                    <p>Keep your bounce rate under 1% to protect your domain reputation.</p>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <span class="benefit-icon">📬</span>
+                <div>
+                    <h4>Improve Deliverability</h4>
+                    <p>Ensure your marketing emails actually reach the primary inbox.</p>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <span class="benefit-icon">📊</span>
+                <div>
+                    <h4>Detailed Analytics</h4>
+                    <p>Identify catch-all addresses and risky domains with granular reports.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="benefits-right">
+            <div class="results-card">
+                <div class="results-header">
+                    <h4>Verification Results</h4>
+                    <span class="status">Completed</span>
+                </div>
+
+                <ul class="results-list">
+                    <li>
+                        john.doe@company.com
+                        <span class="valid">✔ Valid</span>
+                    </li>
+                    <li>
+                        info@temp-mail.org
+                        <span class="invalid">✖ Disposable</span>
+                    </li>
+                    <li>
+                        sarah.smith@gmail.com
+                        <span class="warning">⚠ Syntax Error</span>
+                    </li>
+                    <li>
+                        marketing@unknown.io
+                        <span class="neutral">● Catch-all</span>
+                    </li>
+                    <li>
+                        support@legacy.net
+                        <span class="valid">✔ Valid</span>
+                    </li>
+                </ul>
+
+                <a href="./signup.html">
+                    <button class="download-btn">Get Started</button>
+                </a>
+
+            </div>
+        </div>
+    </section>
+    <!-- FINAL CTA -->
+    <hr class="cta-divider">
+
+    <section class="final-cta">
+        <h2>Ready to clean your list?</h2>
+        <button class="cta-btn">Start Free Verification</button>
+    </section>
+
+
+    <footer class="app-footer">
+
+        <div class="footer-container">
+
+            <!-- Brand Section -->
+            <div class="footer-brand">
+                <img src="/images/bg removed.png" alt="Graphura Logo" class="footer-logo">
+
+                <p>
+                    Graphura is a smart digital platform delivering reliable
+                    tools for email verification and data accuracy.
+                </p>
+
+                <!-- Social Icons -->
+                <div class="footer-social">
+                    <a href="https://www.facebook.com/share/19nKAMTopZ/">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://share.google/w9KeZZ72v8KQxGpFn">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/company/graphura-india-private-limited/">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://www.instagram.com/graphura.in">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="/Upload page/upload.html">Upload</a></li>
+                    <li><a href="/Result page/verification-results.html">Result</a></li>
+                    <li><a href="/admin/admin.html">Admin Dashboard</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact -->
+            <div class="footer-contact">
+                <h3>Contact Us</h3>
+                <p>
+                    Email:
+                    <a href="mailto:support@graphura.in" style="color: inherit; text-decoration: none;">
+                        support@graphura.in
+                    </a>
+                </p>
+
+                <p>
+                    Phone:
+                    <a href="tel:+917378021327" style="color: inherit; text-decoration: none;">
+                        +91 7378021327
+                    </a>
+                </p>
+
+                <p>India</p>
+
+            </div>
+
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="footer-bottom">
+            <p>© 2025 Graphura India Private Limited. All Rights Reserved.</p>
+
+            <div class="footer-policy">
+                <a href="./privacy.html">Privacy Policy</a>
+                <span>|</span>
+                <a href="./termandcondition.html">Terms & Conditions</a>
+                <span>|</span>
+                <a href="./cookie.html">Cookie Policy</a>
+            </div>
+        </div>
+
+    </footer>
+
+    </div> 
+    
+    <script>
+function toggleMenu() {
+  const menu = document.getElementById("mobileMenu");
+  menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+}
+</script>
+
+</body>
+
+</html>

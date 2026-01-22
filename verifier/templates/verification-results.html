@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Verification Results – VerifyPro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./result.css">
+</head>
+
+<body class="bg-slate-50 font-display text-slate-700">
+
+<!-- NAVBAR -->
+    <header class="navbar">
+        <div class="logo">
+    <img src="/bg removed.png" alt="EmailVerify Pro Logo" class="logo-img">
+    
+</div>
+
+
+        <nav>
+            <a href="/Home/home.html">Home</a>
+            <a href="/Upload page/upload.html">Upload</a>
+            <a href="/admin/admin.html">Admin Dashboard</a>
+        </nav>
+
+        <div class="nav-buttons">
+            <button class="login-btn">Login</button>
+            <button class="primary-btn">Get Started</button>
+        </div>
+    </header>
+
+<main class="max-w-7xl mx-auto px-6 py-10 space-y-10">
+
+  <!-- TITLE -->
+  <div>
+    <h2 class="text-4xl font-extrabold text-slate-900">
+      Verification Results
+    </h2>
+    <p class="text-slate-500 mt-1">
+      Processed on <span id="processedAt">—</span> • ID:
+      <span id="jobId" class="font-mono">—</span>
+    </p>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="flex gap-4">
+    <button id="exportBtn" class="btn-outline">Export CSV</button>
+    <button id="newBtn" class="btn-primary">New Verification</button>
+  </div>
+
+  <!-- SUMMARY CARDS  -->
+  <section class="summary-grid">
+    <div class="summary-card">
+      <p>Total</p>
+      <h3 id="totalCount">--</h3>
+    </div>
+    <div class="summary-card success">
+      <p>Valid</p>
+      <h3 id="validCount">--</h3>
+    </div>
+    <div class="summary-card danger">
+      <p>Invalid</p>
+      <h3 id="invalidCount">--</h3>
+    </div>
+    <div class="summary-card warning">
+      <p>Disposable</p>
+      <h3 id="disposableCount">--</h3>
+    </div>
+    <div class="summary-card purple">
+      <p>Catch-all</p>
+      <h3 id="catchallCount">--</h3>
+    </div>
+    <div class="summary-card neutral">
+      <p>Unknown</p>
+      <h3 id="unknownCount">--</h3>
+    </div>
+  </section>
+
+  <!-- FILTER BAR -->
+  <section class="filter-bar">
+  <div class="filters" id="statusFilters">
+    <button class="filter-btn active" data-status="all">All Results</button>
+    <button class="filter-btn" data-status="valid">Valid</button>
+    <button class="filter-btn" data-status="invalid">Invalid</button>
+    <button class="filter-btn" data-status="disposable">Disposable</button>
+    <button class="filter-btn" data-status="catch-all">Catch-all</button>
+  </div>
+
+  <div class="search-wrapper">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search emails..."
+    />
+  </div>
+</section>
+
+
+  <!-- RESULTS TABLE -->
+  <section class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Email Address</th>
+          <th>Status</th>
+          <th>Reason</th>
+          <th class="text-right">Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="resultsTable">
+        <!-- Injected by results.js -->
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<script src="./result.js"></script>
+</body>
+</html>
