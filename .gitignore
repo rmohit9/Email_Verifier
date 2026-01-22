@@ -1,3 +1,11 @@
+# Django defaults
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+
 # Virtual Environment
 venv/
 env/
@@ -5,4 +13,6 @@ env/
 # Environment Variables & Secrets (VERY IMPORTANT)
 .env
 
-db.sqlite3
+# Editor settings
+.vscode/
+.idea/
