@@ -161,6 +161,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_ENABLE_UTC = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Task execution settings
 CELERY_TASK_TRACK_STARTED = True
@@ -178,9 +179,15 @@ CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
 }
 
 # Task routing (optional - for multiple queues)
+# Task routing
 CELERY_TASK_ROUTES = {
-    'verifier.tasks.process_email_bulk': {'queue': 'email_verification'},
-    'verifier.tasks.verify_single_email': {'queue': 'email_verification'},
+    # UPDATED: Tasks are now in verifier.views, NOT verifier.tasks
+    'verifier.views.process_email_bulk': {'queue': 'email_verification'},
+}
+
+# Rate limiting for SMTP checks
+CELERY_TASK_ANNOTATIONS = {
+    'verifier.views.verify_single_email_api': {'rate_limit': '10/m'},
 }
 
 # Default queue
@@ -212,4 +219,3 @@ VERIFICATION_BATCH_SIZE = 50  # Process emails in batches of 50
 
 # Disposable Email Detection
 DISPOSABLE_EMAIL_CHECK_ENABLED = True
-
