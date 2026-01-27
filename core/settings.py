@@ -139,8 +139,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Redis Configuration
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_USERNAME = os.environ.get('REDIS_USERNAME', '')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
 REDIS_DB = os.environ.get('REDIS_DB', '0')
-REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+
+# Construct the REDIS_URL with authentication if a password is provided
+if REDIS_PASSWORD:
+    # Format: redis://username:password@host:port/db
+    REDIS_URL = f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+else:
+    # Fallback for local development without password
+    REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
 
 # Celery Broker and Result Backend
 CELERY_BROKER_URL = REDIS_URL
