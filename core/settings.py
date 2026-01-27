@@ -127,3 +127,80 @@ STATICFILES_DIRS = [
     BASE_DIR / 'verifier/static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============================================================================
+# CELERY CONFIGURATION
+# ============================================================================
+
+# Redis Configuration
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_DB = os.environ.get('REDIS_DB', '0')
+REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+
+# Celery Broker and Result Backend
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+
+# Celery Configuration
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Task execution settings
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutes
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+
+# Result backend settings
+CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
+CELERY_RESULT_PERSISTENT = True
+CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
+    'master_name': 'mymaster',
+    'visibility_timeout': 3600,
+}
+
+# Task routing (optional - for multiple queues)
+CELERY_TASK_ROUTES = {
+    'verifier.tasks.process_email_bulk': {'queue': 'email_verification'},
+    'verifier.tasks.verify_single_email': {'queue': 'email_verification'},
+}
+
+# Default queue
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_DEFAULT_EXCHANGE = 'default'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
+
+# Rate limiting for SMTP checks (to avoid being blocked)
+CELERY_TASK_ANNOTATIONS = {
+    'verifier.tasks.verify_single_email': {'rate_limit': '10/m'},  # 10 per minute
+}
+
+# ============================================================================
+# EMAIL VERIFICATION SETTINGS
+# ============================================================================
+
+# SMTP Verification Settings
+SMTP_TIMEOUT = 10  # seconds
+SMTP_CHECK_ENABLED = True
+
+# DNS Settings
+DNS_TIMEOUT = 2.0  # seconds
+DNS_LIFETIME = 2.0  # seconds
+DNS_NAMESERVERS = ['8.8.8.8', '1.1.1.1']  # Google and Cloudflare
+
+# Rate Limiting
+MAX_CONCURRENT_VERIFICATIONS = 100
+VERIFICATION_BATCH_SIZE = 50  # Process emails in batches of 50
+
+# Disposable Email Detection
+DISPOSABLE_EMAIL_CHECK_ENABLED = True
+
