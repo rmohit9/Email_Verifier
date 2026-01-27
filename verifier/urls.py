@@ -11,6 +11,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login, name='login'),
     path('signup/', views.signup, name='signup'),
+    path('logout/', views.logout_view, name='logout'),
     path('upload/', views.upload, name='upload'),
     path('verification-results/', views.verification_results, name='verification_results'),
     path('verification-progress/', views.verification_progress, name='verification_progress'),

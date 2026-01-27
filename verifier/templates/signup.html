@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,52 +8,57 @@
   <title>Create Account | Graphura</title>
   <link rel="stylesheet" href="{% static 'css/signup.css' %}">
 </head>
+
 <body>
 
-  <!-- Page Container -->
   <div class="page-container">
 
-    <!-- Signup Card -->
     <div class="signup-card">
 
-      <!-- Left Section -->
-      <!-- Left Section -->
-<div class="signup-left">
-  <img src="{% static 'register.jpg' %}" alt="Register Illustration" class="register-illustration">
-</div>
+      <div class="signup-left">
+        <img src="{% static 'register.jpg' %}" alt="Register Illustration" class="register-illustration">
+      </div>
 
-
-      <!-- Right Section -->
       <div class="signup-right">
         <h3>Create your account</h3>
 
-        <form>
+        <form method="POST" action="{% url 'signup' %}">
+          {% csrf_token %}
+
+          {% if messages %}
+            <div style="background-color: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9em;">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+
           <div class="field">
             <label>Full Name</label>
-            <input type="text" placeholder="Enter your full name">
+            <input type="text" name="full_name" placeholder="Enter your full name" required>
           </div>
 
           <div class="field">
             <label>Email</label>
-            <input type="email" placeholder="Enter your email">
+            <input type="email" name="email" placeholder="Enter your email" required>
           </div>
 
           <div class="field">
             <label>Password</label>
-            <input type="password" placeholder="Create a password">
+            <input type="password" name="password" placeholder="Create a password" required>
           </div>
 
           <div class="field">
             <label>Confirm Password</label>
-            <input type="password" placeholder="Confirm your password">
+            <input type="password" name="confirm_password" placeholder="Confirm your password" required>
           </div>
 
           <div class="terms">
-            <input type="checkbox">
+            <input type="checkbox" required>
             <span>I agree to the <a href="{% url 'terms' %}">Terms & Conditions</a></span>
           </div>
 
-          <button class="btn">Create Account</button>
+          <button class="btn" type="submit">Create Account</button>
 
           <p class="login-link">
             Already have an account?

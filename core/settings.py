@@ -179,17 +179,18 @@ CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
     'visibility_timeout': 3600,
 }
 
-# Task routing (optional - for multiple queues)
-# Task routing
-CELERY_TASK_ROUTES = {
-    # UPDATED: Tasks are now in verifier.views, NOT verifier.tasks
-    'verifier.views.process_email_bulk': {'queue': 'email_verification'},
-}
+# Task routing 
+# CELERY_TASK_ROUTES = {
+#     # UPDATED: Tasks are now in verifier.views, NOT verifier.tasks
+#     'verifier.views.process_email_bulk': {'queue': 'email_verification'},
+# }
 
-# Rate limiting for SMTP checks
-CELERY_TASK_ANNOTATIONS = {
-    'verifier.views.verify_single_email_api': {'rate_limit': '10/m'},
-}
+# # Rate limiting for SMTP checks
+# CELERY_TASK_ANNOTATIONS = {
+#     'verifier.views.verify_single_email_api': {'rate_limit': '10/m'},
+# }
+
+CELERY_TASK_ROUTES = {}
 
 # Default queue
 CELERY_TASK_DEFAULT_QUEUE = 'default'

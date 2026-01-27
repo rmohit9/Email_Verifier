@@ -153,32 +153,78 @@ emailTextarea.addEventListener("input", () => {
 });
 
 /* =========================================================
-   START VERIFICATION 
+   START VERIFICATION (DB MODE)
 ========================================================= */
-startBtn.addEventListener("click", () => {
+async function startVerification() {
   const isUploadActive = uploadTab.classList.contains("active");
-  const isPasteActive = pasteTab.classList.contains("active");
+  const formData = new FormData();
 
-  if (isUploadActive && fileInput.files.length === 0) {
-    alert("Please upload a CSV or TXT file.");
-    return;
+  // 1. Prepare Data
+  if (isUploadActive) {
+    if (fileInput.files.length === 0) return alert("Please upload a file.");
+    formData.append("file", fileInput.files[0]);
+  } else {
+    const emails = emailTextarea.value.split(/\n|,/).map(e => e.trim()).filter(isValidEmail);
+    if (emails.length === 0) return alert("Enter valid emails.");
+    emails.forEach(e => formData.append("emails", e));
   }
 
-  if (isPasteActive) {
-    const validEmails = emailTextarea.value
-      .split(/\n|,/)
-      .map((e) => e.trim())
-      .filter(isValidEmail);
+  // 2. DISABLE TEST MODE (Save to DB)
+  // We do NOT append 'test_mode' here. 
+  // The serializer defaults test_mode to False, which triggers the DB save logic.
 
-    if (validEmails.length === 0) {
-      alert("Please enter at least one valid email address.");
-      return;
+  // 3. UI Feedback
+  startBtn.textContent = "Processing...";
+  startBtn.disabled = true;
+
+  try {
+    // 4. Call DRF Endpoint
+    const response = await fetch("/api/jobs/", {
+      method: "POST",
+      body: formData,
+      headers: {
+        // CSRF Token is required for POST requests in Django
+        'X-CSRFToken': getCookie('csrftoken') 
+      }
+    });
+
+    if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(JSON.stringify(errData));
     }
+
+    const data = await response.json();
+    
+    // 5. Store ID and Redirect
+    localStorage.setItem("jobId", data.job_id);
+    window.location.href = "/verification-progress/"; 
+
+  } catch (error) {
+    console.error(error);
+    alert("Error starting job: " + error.message);
+    startBtn.textContent = "Start Verification";
+    startBtn.disabled = false;
   }
+}
 
+// Helper to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
-  window.location.href = "../Progress page/verification-progress.html";
-});
+// Bind Click (Runs in DB Mode now)
+startBtn.addEventListener("click", () => startVerification());
 
 /* =========================================================
    INITIAL STATE

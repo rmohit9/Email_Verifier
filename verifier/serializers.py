@@ -5,7 +5,8 @@ class VerificationJobSerializer(serializers.ModelSerializer):
     class Meta:
         model = VerificationJob
         fields = '__all__'
-        read_only_fields = ['job_id', 'status', 'progress_percentage', 'created_at', 'completed_at', 'total_count', 'processed_count', 'valid_count', 'invalid_count']
+        # Added processed/valid/invalid counts to read_only so frontend can't fake them
+        read_only_fields = ['job_id', 'status', 'progress_percentage', 'created_at', 'completed_at', 'total_count', 'processed_count', 'valid_count', 'invalid_count', 'user']
 
 class EmailResultSerializer(serializers.ModelSerializer):
     class Meta:
