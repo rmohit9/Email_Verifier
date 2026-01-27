@@ -5,10 +5,23 @@ from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
-from django.conf import settings  # <--- IMPORT SETTINGS
+from django.conf import settings 
+
+# --- DRF Imports (NEW) ---
+from rest_framework import viewsets, status, views, permissions, parsers
+from rest_framework.response import Response
+from rest_framework.decorators import action
 
 # --- Models ---
 from .models import VerificationJob, EmailResult
+
+# Import the serializers we just created
+from .serializers import (
+    VerificationJobSerializer, 
+    EmailResultSerializer, 
+    SingleVerifySerializer,
+    BulkVerifySerializer
+)
 
 # --- Third Party Imports ---
 from email_validator import validate_email, EmailNotValidError
@@ -216,43 +229,70 @@ def admin_login(request):
     return render(request, 'admin_login.html')
 
 # ============================================================================
-# 4. API ENDPOINTS
+# 4. DRF API VIEWS (NEW - Replaces Manual API Functions)
 # ============================================================================
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def create_verification_job(request):
-    try:
-        emails = []
+class SingleVerifyView(views.APIView):
+    """ API Endpoint to verify a single email instantly. """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = SingleVerifySerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            # Call the pipeline function that is already in this file
+            result = run_verification_pipeline(email)
+            return Response({'email': email, 'result': result}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VerificationJobViewSet(viewsets.ModelViewSet):
+    """
+    API Endpoint for managing Bulk Verification Jobs.
+    Supports: Create (Upload), List, Retrieve, and specialized Actions.
+    """
+    queryset = VerificationJob.objects.all().order_by('-created_at')
+    serializer_class = VerificationJobSerializer
+    parser_classes = (parsers.JSONParser, parsers.MultiPartParser, parsers.FormParser)
+
+    def get_queryset(self):
+        # Users see only their jobs; Staff see all
+        user = self.request.user
+        if user.is_authenticated and not user.is_staff:
+            return VerificationJob.objects.filter(user=user).order_by('-created_at')
+        return super().get_queryset()
+
+    def create(self, request, *args, **kwargs):
+        """ Handles both File Upload and JSON Email List """
+        serializer = BulkVerifySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        emails = serializer.validated_data.get('emails', [])
+        file_obj = serializer.validated_data.get('file')
         filename = "api_upload"
-        
-        if request.FILES.get('file'):
-            uploaded_file = request.FILES['file']
-            filename = uploaded_file.name
-            
-            if filename.endswith('.csv'):
-                decoded_file = uploaded_file.read().decode('utf-8')
-                csv_reader = csv.reader(io.StringIO(decoded_file))
-                next(csv_reader, None) # Skip header
-                for row in csv_reader:
-                    if row and row[0].strip(): emails.append(row[0].strip())
-            
-            elif filename.endswith('.txt'):
-                decoded_file = uploaded_file.read().decode('utf-8')
-                emails = [line.strip() for line in decoded_file.split('\n') if line.strip()]
-            else:
-                return JsonResponse({'error': 'Only CSV or TXT allowed'}, status=400)
-        
-        elif request.content_type == 'application/json':
-            data = json.loads(request.body)
-            emails = data.get('emails', [])
-            filename = data.get('filename', 'api_upload.json')
-        
+
+        # Handle File
+        if file_obj:
+            filename = file_obj.name
+            try:
+                decoded_file = file_obj.read().decode('utf-8')
+                if filename.endswith('.csv'):
+                    reader = csv.reader(io.StringIO(decoded_file))
+                    next(reader, None) # Skip Header
+                    emails = [row[0].strip() for row in reader if row]
+                elif filename.endswith('.txt'):
+                    emails = [line.strip() for line in decoded_file.split('\n') if line.strip()]
+                else:
+                    return Response({"error": "Only .csv or .txt supported"}, status=400)
+            except Exception as e:
+                return Response({"error": f"File read error: {str(e)}"}, status=400)
+
+        # De-duplicate
+        emails = list(set(emails))
         if not emails:
-            return JsonResponse({'error': 'No emails provided'}, status=400)
+            return Response({"error": "No valid emails found."}, status=400)
 
-        emails = list(dict.fromkeys(emails))
-
+        # Create Job
         job = VerificationJob.objects.create(
             user=request.user if request.user.is_authenticated else None,
             filename=filename,
@@ -260,122 +300,44 @@ def create_verification_job(request):
             status='pending'
         )
 
+        # Trigger Celery Task (Function is already in this file)
         process_email_bulk.delay(str(job.job_id), emails)
 
-        return JsonResponse({
-            'job_id': str(job.job_id),
-            'status': 'pending',
-            'total_count': len(emails),
-            'message': 'Job started'
-        }, status=201)
+        # Return Job Info
+        job_serializer = self.get_serializer(job)
+        return Response(job_serializer.data, status=status.HTTP_201_CREATED)
 
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-@require_http_methods(["GET"])
-def get_job_status(request, job_id):
-    try:
-        job = get_object_or_404(VerificationJob, job_id=job_id)
-        return JsonResponse({
-            'job_id': str(job.job_id),
-            'status': job.status,
-            'total_count': job.total_count,
-            'processed_count': job.processed_count,
-            'valid_count': job.valid_count,
-            'invalid_count': job.invalid_count,
-            'progress_percentage': round(job.progress_percentage, 2),
-            'created_at': job.created_at.isoformat(),
-            'completed_at': job.completed_at.isoformat() if job.completed_at else None
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=404)
-
-@require_http_methods(["GET"])
-def get_job_results(request, job_id):
-    try:
-        job = get_object_or_404(VerificationJob, job_id=job_id)
-        page = int(request.GET.get('page', 1))
-        page_size = int(request.GET.get('page_size', 50))
-        status_filter = request.GET.get('status')
-
+    @action(detail=True, methods=['get'])
+    def results(self, request, pk=None):
+        """ Get paginated results for a specific job """
+        job = self.get_object()
         results = EmailResult.objects.filter(job=job)
+        
+        status_filter = request.query_params.get('status')
         if status_filter:
             results = results.filter(status=status_filter)
 
-        paginator = Paginator(results, page_size)
-        page_obj = paginator.get_page(page)
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = EmailResultSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        data = []
-        for r in page_obj:
-            data.append({
-                'email': r.email,
-                'status': r.status,
-                'reason': r.reason,
-                'verification_time_ms': r.verification_time_ms
-            })
+        serializer = EmailResultSerializer(results, many=True)
+        return Response(serializer.data)
 
-        return JsonResponse({
-            'job_id': str(job.job_id),
-            'total_results': paginator.count,
-            'page': page,
-            'results': data
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-@require_http_methods(["GET"])
-def download_job_results(request, job_id):
-    try:
-        job = get_object_or_404(VerificationJob, job_id=job_id)
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None):
+        """ Download results as CSV """
+        job = self.get_object()
         results = EmailResult.objects.filter(job=job)
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="results_{job_id}.csv"'
+        response['Content-Disposition'] = f'attachment; filename="results_{job.job_id}.csv"'
         
         writer = csv.writer(response)
-        writer.writerow(['Email', 'Status', 'Reason', 'Syntax Valid', 'Domain Exists', 'MX Found'])
+        writer.writerow(['Email', 'Status', 'Reason', 'Syntax', 'Domain', 'MX'])
         
         for r in results:
             writer.writerow([r.email, r.status, r.reason, r.syntax_valid, r.domain_exists, r.mx_records_found])
             
         return response
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def verify_single_email_api(request):
-    try:
-        data = json.loads(request.body)
-        email = data.get('email')
-        if not email: return JsonResponse({'error': 'Email required'}, status=400)
-        
-        result = run_verification_pipeline(email)
-        return JsonResponse({'email': email, 'result': result})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-@require_http_methods(["GET"])
-def list_jobs(request):
-    try:
-        jobs = VerificationJob.objects.all().order_by('-created_at')
-        if request.user.is_authenticated and not request.user.is_staff:
-            jobs = jobs.filter(user=request.user)
-            
-        paginator = Paginator(jobs, 20)
-        page = int(request.GET.get('page', 1))
-        page_obj = paginator.get_page(page)
-        
-        data = []
-        for j in page_obj:
-            data.append({
-                'job_id': str(j.job_id),
-                'filename': j.filename,
-                'status': j.status,
-                'progress': j.progress_percentage,
-                'created_at': j.created_at.isoformat()
-            })
-            
-        return JsonResponse({'jobs': data, 'total': paginator.count})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)

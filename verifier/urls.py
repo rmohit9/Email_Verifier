@@ -1,15 +1,20 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+# Create DRF Router
+router = DefaultRouter()
+router.register(r'jobs', views.VerificationJobViewSet, basename='verificationjob')
+
 urlpatterns = [
-    # Page routes
+    # --- HTML Page Routes ---
     path('', views.home, name='home'),
     path('login/', views.login, name='login'),
     path('signup/', views.signup, name='signup'),
     path('upload/', views.upload, name='upload'),
     path('verification-results/', views.verification_results, name='verification_results'),
     path('verification-progress/', views.verification_progress, name='verification_progress'),
-    path('admin/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-login/', views.admin_login, name='admin_login'),
     path('user/', views.user_dashboard, name='user_dashboard'),
     path('settings/', views.settings_page, name='settings'),
@@ -18,12 +23,10 @@ urlpatterns = [
     path('terms/', views.terms, name='terms'),
     path('cookie/', views.cookie, name='cookie'),
     
-    # API routes for email verification
-    path('api/verify/bulk/', views.create_verification_job, name='create_verification_job'),
-    path('api/verify/single/', views.verify_single_email_api, name='verify_single_email_api'),
-    path('api/jobs/', views.list_jobs, name='list_jobs'),
-    path('api/jobs/<uuid:job_id>/status/', views.get_job_status, name='get_job_status'),
-    path('api/jobs/<uuid:job_id>/results/', views.get_job_results, name='get_job_results'),
-    path('api/jobs/<uuid:job_id>/download/', views.download_job_results, name='download_job_results'),
+    # --- DRF API Routes ---
+    # This includes /api/jobs/, /api/jobs/{id}/results/, /api/jobs/{id}/download/
+    path('api/', include(router.urls)),
+    
+    # Single verify endpoint
+    path('api/verify-single/', views.SingleVerifyView.as_view(), name='api_verify_single'),
 ]
-

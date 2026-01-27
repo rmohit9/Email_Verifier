@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'verifier',
 ]
 
@@ -219,3 +220,18 @@ VERIFICATION_BATCH_SIZE = 50  # Process emails in batches of 50
 
 # Disposable Email Detection
 DISPOSABLE_EMAIL_CHECK_ENABLED = True
+
+# ============================================================================
+# DRF CONFIGURATION
+# ============================================================================
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny', 
+    ]
+}
