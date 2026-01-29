@@ -1,3 +1,188 @@
 {% load static %}
-<h2>Logs</h2>
-<p>System logs loaded from backend</p>
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Logs</title>
+
+	<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+
+<body class="bg-slate-100 flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-white border-r p-6 flex flex-col">
+	<div class="mb-8 flex justify-center">
+		<img src="{% static 'bg removed.png' %}" class="h-10 object-contain" />
+	</div>
+
+	<nav class="flex flex-col gap-2">
+		<a href="{% url 'admin_dashboard' %}" class="sidebar-link">Dashboard</a>
+		<a href="{% url 'user_dashboard' %}" class="sidebar-link">Users</a>
+		<a href="{% url 'logs' %}" class="sidebar-link active">Logs</a>
+		<a href="{% url 'settings' %}" class="sidebar-link">Settings</a>
+	</nav>
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 overflow-y-auto p-8">
+
+	<!-- HEADER -->
+	<header class="flex justify-between items-center mb-8">
+		<div>
+			<h2 class="text-3xl font-bold">System Logs</h2>
+			<p class="text-slate-500">View logs for specific Job IDs and system events</p>
+		</div>
+
+		<img src="{% static 'bg removed.png' %}" class="h-10 object-contain" />
+	</header>
+
+	<!-- FILTER / SEARCH -->
+	<section class="bg-white rounded-xl shadow-sm p-6 mb-6 ">
+		{% if warning %}
+			<div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+				<div class="flex items-start">
+					<span class="text-2xl mr-3">⚠️</span>
+					<p class="text-amber-800">{{ warning }}</p>
+				</div>
+			</div>
+		{% endif %}
+
+		<form id="logsForm" method="get" action="" class="flex flex-wrap gap-3 items-start">
+			<div class="flex-1 flex items-start gap-3">
+				<div class="flex-1">
+					<label class="block text-sm text-slate-600 mb-1">Job ID</label>
+					<input name="job_id" type="text" value="{{ request.GET.job_id|default:'' }}" placeholder="Enter Job ID (e.g., JOB-5405 or full UUID)" class="w-full border rounded-md p-2">
+					<p class="text-xs text-slate-500 mt-1">Format: JOB-xxxx or full UUID</p>
+				</div>
+
+				<!-- Prominent search button next to the Job ID field for visibility -->
+				<div class="w-40 mt-6">
+					<button id="logsSearchBtn" type="submit" name="search" value="1" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md">Search</button>
+				</div>
+			</div>
+
+			<div class="w-full sm:w-48">
+			<label class="block text-sm text-slate-600 mb-1">Status</label>
+			<select name="level" class="w-full border rounded-md p-2">
+				<option value="">All</option>
+				<option value="pending" {% if request.GET.level == 'pending' %}selected{% endif %}>Pending</option>
+				<option value="processing" {% if request.GET.level == 'processing' %}selected{% endif %}>Processing</option>
+				<option value="completed" {% if request.GET.level == 'completed' %}selected{% endif %}>Completed</option>
+				<option value="failed" {% if request.GET.level == 'failed' %}selected{% endif %}>Failed</option>
+			</select>
+			</div>
+
+			<div class="w-full sm:w-auto mt-2 sm:mt-6 flex gap-2">
+				<button type="submit" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-md">Filter</button>
+				<button type="button" id="logsClearBtn" class="px-4 py-2 bg-white border text-slate-700 rounded-md">Clear</button>
+			</div>
+		</form>
+	</section>
+
+	<!-- LOGS TABLE -->
+	<section id="logsContainer" class="bg-white rounded-xl shadow-sm p-6 ">
+		<h3 class="text-lg font-semibold mb-4">Verification Jobs ({{ logs_count }} found)</h3>
+
+		{% if logs_count and logs_count > 0 %}
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead class="bg-slate-50 text-slate-500">
+						<tr>
+							<th class="p-3 text-left">Job ID</th>
+							<th class="p-3 text-left">Filename</th>
+							<th class="p-3 text-left">Status</th>
+							<th class="p-3 text-left">Created</th>
+							<th class="p-3 text-center">Total</th>
+							<th class="p-3 text-center">Valid</th>
+							<th class="p-3 text-center">Invalid</th>
+							<th class="p-3 text-center">Disposable</th>
+							<th class="p-3 text-center">Progress</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for job in logs %}
+							<tr class="border-t hover:bg-slate-50">
+								<td class="p-3 text-slate-700 font-mono text-xs">{{ job.job_id }}</td>
+								<td class="p-3 text-slate-700">{{ job.filename|default:"—" }}</td>
+								<td class="p-3">
+									{% if job.status == 'completed' %}
+										<span class="px-2 py-1 bg-green-100 text-green-600 rounded font-semibold text-xs">{{ job.status|upper }}</span>
+									{% elif job.status == 'processing' %}
+										<span class="px-2 py-1 bg-blue-100 text-blue-600 rounded font-semibold text-xs">{{ job.status|upper }}</span>
+									{% elif job.status == 'failed' %}
+										<span class="px-2 py-1 bg-red-100 text-red-600 rounded font-semibold text-xs">{{ job.status|upper }}</span>
+									{% else %}
+										<span class="px-2 py-1 bg-amber-100 text-amber-600 rounded font-semibold text-xs">{{ job.status|upper }}</span>
+									{% endif %}
+								</td>
+								<td class="p-3 text-slate-700">{{ job.created_at|date:"Y-m-d H:i" }}</td>
+								<td class="p-3 text-center text-slate-700">{{ job.total_count }}</td>
+								<td class="p-3 text-center text-green-600 font-semibold">{{ job.valid_count }}</td>
+								<td class="p-3 text-center text-red-600 font-semibold">{{ job.invalid_count }}</td>
+								<td class="p-3 text-center text-amber-600 font-semibold">{{ job.disposable_count }}</td>
+								<td class="p-3 text-center">
+									<div class="w-16 h-2 bg-slate-200 rounded-full overflow-hidden mx-auto">
+										<div class="h-full bg-indigo-600" style="width: {{ job.progress_percentage }}%"></div>
+									</div>
+									<span class="text-xs text-slate-500">{{ job.progress_percentage|floatformat:0 }}%</span>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		{% else %}
+			<div class="p-6 text-center">
+				<p class="text-slate-500 text-lg mb-2">No verification jobs found.</p>
+				{% if job_id_input %}
+					<p class="text-slate-400 text-sm">Job ID: <span class="font-mono">{{ job_id_input }}</span> returned no results.</p>
+				{% else %}
+					<p class="text-slate-400 text-sm">No jobs have been created yet.</p>
+				{% endif %}
+			</div>
+		{% endif %}
+	</section>
+
+<script>
+// Auto-scroll to results when logs are present
+window.addEventListener('DOMContentLoaded', () => {
+	try {
+		const count = Number({{ logs_count|default:0 }});
+		if (count > 0) {
+			const el = document.getElementById('logsContainer');
+			if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	} catch (e) {
+		// ignore
+	}
+
+	// Clear button handler
+	const clearBtn = document.getElementById('logsClearBtn');
+	if (clearBtn) {
+		clearBtn.addEventListener('click', () => {
+			const jobInput = document.querySelector('#logsForm input[name="job_id"]');
+			const statusSelect = document.querySelector('#logsForm select[name="level"]');
+			if (jobInput) jobInput.value = '';
+			if (statusSelect) statusSelect.value = '';
+			// submit the form to refresh results
+			document.getElementById('logsForm').submit();
+		});
+	}
+
+	// If job id field has content, focus the prominent Search button for keyboard users
+	const searchBtn = document.getElementById('logsSearchBtn');
+	const jobInput = document.querySelector('#logsForm input[name="job_id"]');
+	if (searchBtn && jobInput && jobInput.value && jobInput.value.trim().length > 0) {
+		searchBtn.focus({preventScroll:true});
+	}
+});
+</script>
+
+</main>
+
+</body>
+</html>

@@ -13,6 +13,9 @@
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 </head>
@@ -45,10 +48,140 @@
 <main class="flex-1 overflow-y-auto p-8">
 
   <!-- HEADER -->
-  <header class="mb-8 flex justify-between items-center">
+  <header class="mb-8">
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold">Dashboard</h2>
+      <p class="text-slate-500">System statistics and overview</p>
+    </div>
+  </header>
+
+  <!-- STATS CARDS -->
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Jobs -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-slate-500 text-sm font-medium">Total Jobs</p>
+          <h3 class="text-4xl font-bold text-slate-900 mt-2">{{ stats.total_jobs }}</h3>
+        </div>
+        <div class="bg-blue-100 p-3 rounded-lg">
+          <span class="text-2xl">📊</span>
+        </div>
+      </div>
+      <p class="text-slate-500 text-xs mt-3">All verification jobs created</p>
+    </div>
+
+    <!-- Jobs Done -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-slate-500 text-sm font-medium">Jobs Done</p>
+          <h3 class="text-4xl font-bold text-slate-900 mt-2">{{ stats.completed_jobs }}</h3>
+        </div>
+        <div class="bg-green-100 p-3 rounded-lg">
+          <span class="text-2xl">✅</span>
+        </div>
+      </div>
+      <p class="text-slate-500 text-xs mt-3">Successfully completed</p>
+    </div>
+
+    <!-- Mails Checked -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-slate-500 text-sm font-medium">Mails Checked</p>
+          <h3 class="text-4xl font-bold text-slate-900 mt-2">{{ stats.total_emails|default:'0' }}</h3>
+        </div>
+        <div class="bg-purple-100 p-3 rounded-lg">
+          <span class="text-2xl">📧</span>
+        </div>
+      </div>
+      <p class="text-slate-500 text-xs mt-3">Total emails verified</p>
+    </div>
+
+    <!-- Anomalies Found -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-slate-500 text-sm font-medium">Anomalies Found</p>
+          <h3 class="text-4xl font-bold text-red-600 mt-2">{{ stats.anomalies|default:'0' }}</h3>
+        </div>
+        <div class="bg-red-100 p-3 rounded-lg">
+          <span class="text-2xl">⚠️</span>
+        </div>
+      </div>
+      <p class="text-slate-500 text-xs mt-3">Invalid & disposable emails</p>
+    </div>
+  </section>
+
+  <!-- EMAIL BREAKDOWN CARDS -->
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Valid Emails -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-slate-500 text-sm font-medium">Valid Emails</p>
+          <h3 class="text-4xl font-bold text-green-600 mt-2">{{ stats.valid_emails|default:'0' }}</h3>
+        </div>
+        <div class="bg-green-100 p-3 rounded-lg">
+          <span class="text-2xl">✅</span>
+        </div>
+      </div>
+      <p class="text-slate-500 text-xs mt-3">Successfully verified</p>
+    </div>
+
+    <!-- Invalid Emails -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-slate-500 text-sm font-medium">Invalid Emails</p>
+          <h3 class="text-4xl font-bold text-red-600 mt-2">{{ stats.invalid_emails|default:'0' }}</h3>
+        </div>
+        <div class="bg-red-100 p-3 rounded-lg">
+          <span class="text-2xl">❌</span>
+        </div>
+      </div>
+      <p class="text-slate-500 text-xs mt-3">Failed verification</p>
+    </div>
+
+    <!-- Disposable Emails -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-slate-500 text-sm font-medium">Disposable Emails</p>
+          <h3 class="text-4xl font-bold text-amber-600 mt-2">{{ stats.disposable_emails|default:'0' }}</h3>
+        </div>
+        <div class="bg-amber-100 p-3 rounded-lg">
+          <span class="text-2xl">🗑️</span>
+        </div>
+      </div>
+      <p class="text-slate-500 text-xs mt-3">Temporary/burner addresses</p>
+    </div>
+  </section>
+
+  <!-- ANALYTICS CHARTS SECTION -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Job Status Distribution -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="text-lg font-semibold mb-4">Job Status Distribution</h3>
+      <div class="relative h-72">
+        <canvas id="jobStatusChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Email Verification Results -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="text-lg font-semibold mb-4">Email Verification Results</h3>
+      <div class="relative h-72">
+        <canvas id="emailResultsChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN MANAGEMENT SECTION -->
+  <header class="mb-6 flex justify-between items-center">
     <div>
-      <h2 class="text-3xl font-bold">Admin Management</h2>
-      <p class="text-slate-500">Add, manage, and remove admins</p>
+      <h3 class="text-2xl font-bold">Admin Management</h3>
     </div>
 
     <!-- ADD ADMIN BUTTON -->
@@ -202,6 +335,70 @@ function resetForm() {
   createBtn.disabled = true;
   createBtn.classList.add("opacity-50", "cursor-not-allowed");
 }
+
+/* ==================== ANALYTICS CHARTS ==================== */
+
+// Job Status Distribution Chart
+const jobStatusCtx = document.getElementById('jobStatusChart').getContext('2d');
+const jobStatusChart = new Chart(jobStatusCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Completed', 'Pending', 'Processing', 'Failed'],
+    datasets: [{
+      data: [
+        {{ analytics.job_status.completed }},
+        {{ analytics.job_status.pending }},
+        {{ analytics.job_status.processing }},
+        {{ analytics.job_status.failed }}
+      ],
+      backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+      borderColor: ['#059669', '#d97706', '#1d4ed8', '#dc2626'],
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { padding: 15, usePointStyle: true }
+      }
+    }
+  }
+});
+
+// Email Verification Results Chart
+const emailResultsCtx = document.getElementById('emailResultsChart').getContext('2d');
+const emailResultsChart = new Chart(emailResultsCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Valid', 'Invalid', 'Disposable'],
+    datasets: [{
+      label: 'Email Count',
+      data: [
+        {{ analytics.email_verification.valid }},
+        {{ analytics.email_verification.invalid }},
+        {{ analytics.email_verification.disposable }}
+      ],
+      backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+      borderColor: ['#059669', '#dc2626', '#d97706'],
+      borderWidth: 1,
+      borderRadius: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: true, position: 'top' }
+    },
+    scales: {
+      x: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
 </script>
 
 </body>

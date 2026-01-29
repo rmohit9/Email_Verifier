@@ -1,10 +1,4 @@
 /* =========================================================
-   CONFIG
-========================================================= */
-const BACKEND_TIMEOUT = 4000; // ms (4 seconds)
-let backendResponded = false;
-
-/* =========================================================
    ELEMENT REFERENCES
 ========================================================= */
 const jobIdEl = document.getElementById("jobId");
@@ -13,6 +7,7 @@ const progressBar = document.getElementById("progressBar");
 const currentStepEl = document.getElementById("currentStep");
 const timeRemainingEl = document.getElementById("timeRemaining");
 
+// Ensure these IDs match your HTML exactly
 const processedEl = document.getElementById("processedEmails");
 const totalEl = document.getElementById("totalEmails");
 const validEl = document.getElementById("validEmails");
@@ -20,182 +15,139 @@ const invalidEl = document.getElementById("invalidEmails");
 const riskyEl = document.getElementById("riskyEmails");
 
 const logBody = document.getElementById("logBody");
+const viewResultsBtn = document.getElementById("viewResultsBtn");
 
 /* =========================================================
-   INITIAL SAFE UI STATE 
+   STATE
 ========================================================= */
-jobIdEl.textContent = localStorage.getItem("jobId") || "N/A";
-
-progressPercentEl.textContent = "—";
-progressBar.style.width = "0%";
-currentStepEl.textContent = "Waiting for backend...";
-timeRemainingEl.textContent = "--";
-
-processedEl.textContent = "--";
-totalEl.textContent = "--";
-validEl.textContent = "--";
-invalidEl.textContent = "--";
-riskyEl.textContent = "--";
+const jobId = localStorage.getItem("jobId");
+let isComplete = false;
 
 /* =========================================================
-   PIPELINE STATE CONTROLLER
+   INIT CHECK
 ========================================================= */
-function setPipelineState(stepName, state) {
-  const step = document.querySelector(`[data-step="${stepName}"]`);
-  if (!step) return;
-
-  const icon = step.querySelector(".pipeline-icon");
-  const status = step.querySelector(".status");
-
-  icon.className = "pipeline-icon";
-  status.className = "status";
-
-  if (state === "completed") {
-    icon.classList.add("pipeline-completed");
-    icon.innerHTML = `<span class="material-symbols-outlined">check</span>`;
-    status.classList.add("success");
-    status.textContent = "Completed";
-  }
-
-  if (state === "running") {
-    icon.classList.add("pipeline-running");
-    icon.innerHTML = `<span class="material-symbols-outlined">sync</span>`;
-    status.classList.add("running");
-    status.textContent = "Running";
-  }
-
-  if (state === "pending") {
-    icon.classList.add("pipeline-pending");
-    icon.innerHTML = `<span class="material-symbols-outlined">pending</span>`;
-    status.classList.add("pending");
-    status.textContent = "Pending";
-  }
-
-  if (state === "error") {
-    icon.classList.add("pipeline-error");
-    icon.innerHTML = `<span class="material-symbols-outlined">error</span>`;
-    status.classList.add("error");
-    status.textContent = "Error";
-  }
+if (!jobId) {
+  alert("No active job found. Redirecting to upload.");
+  window.location.href = "/upload/";
+} else {
+  if (jobIdEl) jobIdEl.textContent = jobId;
 }
 
 /* =========================================================
-   BACKEND ERROR STATE (SAFE FAIL)
+   POLLING FUNCTION (DRF / REDIS)
 ========================================================= */
-function showBackendError() {
-  currentStepEl.textContent = "Backend is not responding";
-  progressPercentEl.textContent = "—";
-  progressBar.style.width = "0%";
-  timeRemainingEl.textContent = "--";
-
-  processedEl.textContent = "--";
-  totalEl.textContent = "--";
-  validEl.textContent = "--";
-  invalidEl.textContent = "--";
-  riskyEl.textContent = "--";
-
-  setPipelineState("Syntax Validation", "completed");
-  setPipelineState("Domain Check", "completed");
-  setPipelineState("MX Record Lookup", "error");
-  setPipelineState("SMTP Handshake", "pending");
-  setPipelineState("Disposable Detection", "pending");
-
-  const errorLog = document.createElement("p");
-  errorLog.style.color = "#f87171";
-  errorLog.textContent = `[${new Date().toLocaleTimeString()}] ERROR: Backend is not responding`;
-  logBody.prepend(errorLog);
-}
-
-/* =========================================================
-   BACKEND FETCH PLACEHOLDER
-    Replace this with real API / WebSocket
-========================================================= */
-function fetchBackendProgress() {
-  //  Simulate backend down
-  return null;
-
-  /*
-  //  Example real backend response (future)
-  return {
-    total: 2500,
-    processed: 1200,
-    valid: 1100,
-    invalid: 60,
-    risky: 40,
-    progress: 48,
-    step: "MX Record Lookup"
-  };
-  */
-}
-
-/* =========================================================
-   HANDLE BACKEND DATA (WHEN AVAILABLE)
-========================================================= */
-function handleBackendData(data) {
-  backendResponded = true;
-
-  totalEl.textContent = data.total;
-  processedEl.textContent = data.processed;
-  validEl.textContent = data.valid;
-  invalidEl.textContent = data.invalid;
-  riskyEl.textContent = data.risky;
-
-  progressPercentEl.textContent = data.progress + "%";
-  progressBar.style.width = data.progress + "%";
-  currentStepEl.textContent = data.step;
-  timeRemainingEl.textContent = "calculating...";
-
-  setPipelineState("Syntax Validation", "completed");
-  setPipelineState("Domain Check", "completed");
-  setPipelineState("MX Record Lookup", "running");
-  setPipelineState("SMTP Handshake", "pending");
-  setPipelineState("Disposable Detection", "pending");
-
-  const log = document.createElement("p");
-  log.textContent = `[${new Date().toLocaleTimeString()}] Backend progress updated`;
-  logBody.prepend(log);
-}
-
-/* =========================================================
-   BACKEND TIMEOUT GUARD
-========================================================= */
-setTimeout(() => {
-  if (!backendResponded) {
-    showBackendError();
-  }
-}, BACKEND_TIMEOUT);
-
-/* =========================================================
-   POLLING LOOP (SAFE)
-========================================================= */
-const pollInterval = setInterval(() => {
-  const backendData = fetchBackendProgress();
-
-  if (backendData) {
-    handleBackendData(backendData);
-  }
-}, 1000);
-
-async function pollJobStatus() {
-  const jobId = localStorage.getItem("jobId");
-  if (!jobId) return;
+async function checkProgress() {
+  if (isComplete) return;
 
   try {
-    const res = await fetch(`/api/job-status/${jobId}`);
-    if (!res.ok) throw new Error("Backend not responding");
+    // Call the new DRF endpoint
+    const res = await fetch(`/api/jobs/${jobId}/`);
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        if (currentStepEl) currentStepEl.textContent = "Job not found (Expired?)";
+        return;
+      }
+      throw new Error("API Error");
+    }
 
     const data = await res.json();
+    updateUI(data);
 
-    updateProgressUI(data);
-
-    if (data.progress === 100) {
-      setTimeout(() => {
-        window.location.href = "verification-results.html";
-      }, 800);
+    if (data.status === "completed" || data.status === "failed") {
+      isComplete = true;
+      finalize(data);
+    } else {
+      // Poll again in 1 second
+      setTimeout(checkProgress, 1000);
     }
   } catch (err) {
-    showBackendError();
+    console.error("Polling error:", err);
+    if (currentStepEl) currentStepEl.textContent = "Connection Error...";
+    setTimeout(checkProgress, 3000); // Retry slower
   }
 }
 
-setInterval(pollJobStatus, 3000);
+/* =========================================================
+   UI UPDATES
+========================================================= */
+function updateUI(data) {
+  // Update Counts
+  const processed = data.processed_count || 0;
+  const total = data.total_count || 0;
+  const percentage = data.progress_percentage || 0;
+
+  if (processedEl) processedEl.textContent = processed;
+  if (totalEl) totalEl.textContent = total;
+
+  // Note: Test Mode might not send live valid/invalid counts until the end
+  if (validEl) validEl.textContent = data.valid_count !== undefined ? data.valid_count : "--";
+  if (invalidEl) invalidEl.textContent = data.invalid_count !== undefined ? data.invalid_count : "--";
+
+  // Update Status Text
+  if (progressBar) progressBar.style.width = `${percentage}%`;
+  if (progressPercentEl) progressPercentEl.textContent = `${Math.round(percentage)}%`;
+
+  // --- NEW PIPELINE VISUAL LOGIC ---
+
+  // 1. Syntax & Disposable are practically instant (0-5%)
+  if (percentage >= 0) {
+    markStepCompleted("Syntax Validation");
+    markStepCompleted("Disposable Detection");
+  }
+
+  // 2. Domain & MX happen next (5-15%)
+  if (percentage > 5) {
+    markStepCompleted("Domain Check");
+    markStepRunning("MX Record Lookup");
+  }
+
+  // 3. MX is done, SMTP starts (15%+)
+  if (percentage > 15) {
+    markStepCompleted("MX Record Lookup");
+    markStepRunning("SMTP Handshake");
+  }
+
+  // 4. Finished
+  if (percentage >= 100) {
+    markStepCompleted("SMTP Handshake");
+  }
+}
+
+function finalize(data) {
+  if (data.status === "completed") {
+    // Show results button if it exists
+    if (viewResultsBtn) {
+      viewResultsBtn.disabled = false;
+      viewResultsBtn.classList.remove("opacity-50", "cursor-not-allowed");
+    }
+
+    // Auto-redirect to results after short delay
+    setTimeout(() => {
+      window.location.href = "/verification-results/";
+    }, 1000);
+  } else {
+    alert("Job Failed: " + (data.error_message || "Unknown error"));
+  }
+}
+
+// Start polling
+checkProgress();
+
+function markStepCompleted(stepName) {
+  const el = document.querySelector(`[data-step="${stepName}"] .status`);
+  if (el) {
+    el.textContent = "Completed";
+    el.className = "status success";
+    el.previousElementSibling.previousElementSibling.className = "pipeline-icon pipeline-completed";
+  }
+}
+
+function markStepRunning(stepName) {
+  const el = document.querySelector(`[data-step="${stepName}"] .status`);
+  if (el) {
+    el.textContent = "Running";
+    el.className = "status running";
+    el.previousElementSibling.previousElementSibling.className = "pipeline-icon pipeline-running";
+  }
+}
