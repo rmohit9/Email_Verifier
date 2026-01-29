@@ -5,18 +5,24 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import F
+import logging
 
 from rest_framework import viewsets, status, views, permissions, parsers
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.throttling import ScopedRateThrottle
 
-from .models import VerificationJob, EmailResult
+# --- Local Imports ---
+from .models import VerificationJob, EmailResult, EmailCampaign, CampaignRecipient, CampaignLog
 from .serializers import (
     VerificationJobSerializer, 
     EmailResultSerializer, 
     SingleVerifySerializer,
-    BulkVerifySerializer
+    BulkVerifySerializer,
+    EmailCampaignSerializer,
+    EmailCampaignCreateSerializer,
+    CampaignRecipientSerializer,
+    CampaignLogSerializer
 )
 
 from email_validator import validate_email, EmailNotValidError
@@ -27,7 +33,155 @@ from datetime import timedelta
 import csv
 import io
 import requests
-import re
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class BrevoAPIClient:
+    """
+    Lightweight in-file Brevo client (moved from brevo_service.py)
+    """
+    BASE_URL = "https://api.brevo.com/v3"
+
+    def __init__(self, api_key: str = None):
+        import os
+        self.api_key = api_key or os.getenv('BREVO_API_KEY')
+        if not self.api_key:
+            raise ValueError("BREVO_API_KEY environment variable is not set")
+
+        self.headers = {
+            "api-key": self.api_key,
+            "Content-Type": "application/json"
+        }
+
+    def send_email(self, to_email, subject, html_content, sender_name=None, sender_email=None, reply_to=None, tags=None, custom_headers=None):
+        from django.conf import settings
+        import requests
+
+        sender_name = sender_name or getattr(settings, 'BREVO_SENDER_NAME', 'Email Campaign')
+        sender_email = sender_email or getattr(settings, 'BREVO_SENDER_EMAIL')
+        if not sender_email:
+            raise ValueError("BREVO_SENDER_EMAIL is not configured")
+
+        payload = {
+            "sender": {"name": sender_name, "email": sender_email},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_content,
+        }
+
+        if reply_to:
+            payload["replyTo"] = {"email": reply_to}
+        if tags:
+            payload["tags"] = tags
+        if custom_headers:
+            payload["headers"] = custom_headers
+
+        try:
+            response = requests.post(f"{self.BASE_URL}/smtp/email", json=payload, headers=self.headers, timeout=10)
+            if response.status_code in (200, 201):
+                data = response.json()
+                return {"success": True, "message_id": data.get('messageId'), "status_code": response.status_code}
+            else:
+                return {"success": False, "error": response.text, "status_code": response.status_code}
+        except requests.exceptions.Timeout:
+            return {"success": False, "error": "Request timeout while sending email to Brevo API"}
+        except requests.exceptions.RequestException as e:
+            return {"success": False, "error": f"Request failed: {str(e)}"}
+        except Exception as e:
+            return {"success": False, "error": f"Unexpected error: {str(e)}"}
+
+
+# Celery tasks moved from verifier/tasks.py into this module so we can remove the external file
+from celery import shared_task
+
+
+@shared_task(bind=True, max_retries=3)
+def send_campaign_emails(self, campaign_id):
+    from django.utils import timezone
+    import time
+    try:
+        campaign = EmailCampaign.objects.get(campaign_id=campaign_id)
+        campaign.status = 'sending'
+        campaign.save(update_fields=['status', 'updated_at'])
+
+        CampaignLog.objects.create(campaign=campaign, level='info', message=f"Starting to send campaign '{campaign.subject}' to {campaign.total_recipients} recipients")
+
+        pending_recipients = CampaignRecipient.objects.filter(campaign=campaign, status='pending').values_list('email', flat=True)
+        if not pending_recipients:
+            campaign.status = 'completed'
+            campaign.sent_at = timezone.now()
+            campaign.save(update_fields=['status', 'sent_at', 'updated_at'])
+            CampaignLog.objects.create(campaign=campaign, level='info', message="Campaign completed. No pending recipients.")
+            return
+
+        brevo_client = BrevoAPIClient()
+
+        sent_count = 0
+        failed_count = 0
+        batch_size = getattr(campaign, 'batch_size', 50) or 50
+        delay_between_batches = getattr(campaign, 'delay_between_batches', 1.0) or 1.0
+
+        for i, email in enumerate(pending_recipients):
+            try:
+                result = brevo_client.send_email(to_email=email, subject=campaign.subject, html_content=campaign.message, tags=['campaign', f'campaign-{campaign_id}'])
+                recipient = CampaignRecipient.objects.get(campaign=campaign, email=email)
+
+                if result.get('success'):
+                    recipient.status = 'sent'
+                    recipient.sent_at = timezone.now()
+                    recipient.brevo_message_id = result.get('message_id')
+                    recipient.save(update_fields=['status', 'sent_at', 'brevo_message_id'])
+                    sent_count += 1
+                else:
+                    recipient.status = 'failed'
+                    recipient.error_message = result.get('error', 'Unknown error')
+                    recipient.save(update_fields=['status', 'error_message'])
+                    failed_count += 1
+                    CampaignLog.objects.create(campaign=campaign, level='error', message=f"Failed to send to {email}: {result.get('error')}", recipient=recipient)
+
+                campaign.sent_count = sent_count
+                campaign.failed_count = failed_count
+                campaign.update_progress()
+
+                if (i + 1) % int(batch_size) == 0:
+                    time.sleep(float(delay_between_batches))
+
+            except CampaignRecipient.DoesNotExist:
+                failed_count += 1
+            except Exception as e:
+                failed_count += 1
+
+        campaign.status = 'completed'
+        campaign.sent_at = timezone.now()
+        campaign.save(update_fields=['status', 'sent_at', 'updated_at'])
+        CampaignLog.objects.create(campaign=campaign, level='success', message=f"Campaign completed. Sent: {sent_count}, Failed: {failed_count}")
+
+    except EmailCampaign.DoesNotExist:
+        logger.error(f"Campaign {campaign_id} not found")
+    except Exception as e:
+        logger.error(f"Error in send_campaign_emails task: {str(e)}")
+        try:
+            campaign = EmailCampaign.objects.get(campaign_id=campaign_id)
+            campaign.status = 'failed'
+            campaign.error_message = str(e)
+            campaign.save(update_fields=['status', 'error_message', 'updated_at'])
+            CampaignLog.objects.create(campaign=campaign, level='error', message=f"Campaign failed with error: {str(e)}")
+        except EmailCampaign.DoesNotExist:
+            pass
+        raise self.retry(exc=e, countdown=60 * (2 ** self.request.retries))
+
+
+@shared_task
+def cleanup_old_campaigns(days=30):
+    from django.utils import timezone
+    from datetime import timedelta
+    cutoff_date = timezone.now() - timedelta(days=days)
+    deleted_count, _ = EmailCampaign.objects.filter(status='draft', created_at__lt=cutoff_date).delete()
+    logger.info(f"Cleaned up {deleted_count} old draft campaigns")
+    return deleted_count
+
 
 # ============================================================================
 # 0. GLOBAL DATA & LISTS
@@ -473,3 +627,507 @@ class VerificationJobViewSet(viewsets.ModelViewSet):
                 r.is_free_email, r.has_dns_security, r.mx_records_found
             ])
         return response
+
+# ============================================================================
+# 5. OTHER STANDARD PAGE VIEWS
+# ============================================================================
+
+def upload(request): return render(request, 'upload.html')
+def verification_results(request): return render(request, 'verification-results.html')
+def verification_progress(request): return render(request, 'verification-progress.html')
+def user_dashboard(request): return render(request, 'user.html')
+def settings_page(request): return render(request, 'settings.html')
+def logs(request):
+    from .models import VerificationJob
+    
+    # Get filter parameters
+    job_id_input = request.GET.get('job_id', '').strip()
+    level = request.GET.get('level', '')
+    warning_message = None
+    
+    # Start with all jobs (they are the logs)
+    logs_list = VerificationJob.objects.all().order_by('-created_at')
+    
+    # Filter by job_id if provided
+    if job_id_input:
+        try:
+            import uuid
+            # Try direct UUID match first
+            uuid.UUID(job_id_input)
+            logs_list = logs_list.filter(job_id=job_id_input)
+        except (ValueError, TypeError):
+            # Try to match by partial UUID (e.g., "JOB-5405" or just "5405")
+            clean_input = job_id_input.replace('JOB-', '').replace('job-', '')
+            
+            try:
+                # Try to find a job with UUID containing this string
+                logs_list = logs_list.filter(job_id__icontains=clean_input)
+                if not logs_list.exists():
+                    warning_message = f"No jobs found matching '{job_id_input}'."
+            except Exception as e:
+                warning_message = f"Invalid Job ID format. Expected format: 'JOB-xxxx' or full UUID."
+    
+    # Filter by level/status if provided
+    if level:
+        logs_list = logs_list.filter(status=level)
+    
+    return render(request, 'logs.html', {
+        'logs': logs_list,
+        'warning': warning_message,
+        'logs_count': logs_list.count(),
+        'job_id_input': job_id_input
+    })
+def privacy(request): return render(request, 'privacy.html')
+def terms(request): return render(request, 'termandcondition.html')
+def cookie(request): return render(request, 'cookie.html')
+
+def admin_dashboard(request):
+    from django.db.models import Sum, Count
+    
+    # Fetch basic stats
+    total_jobs = VerificationJob.objects.count()
+    completed_jobs = VerificationJob.objects.filter(status='completed').count()
+    pending_jobs = VerificationJob.objects.filter(status='pending').count()
+    processing_jobs = VerificationJob.objects.filter(status='processing').count()
+    failed_jobs = VerificationJob.objects.filter(status='failed').count()
+    
+    total_emails = VerificationJob.objects.aggregate(Sum('total_count'))['total_count__sum'] or 0
+    valid_emails = VerificationJob.objects.aggregate(Sum('valid_count'))['valid_count__sum'] or 0
+    invalid_emails = VerificationJob.objects.aggregate(Sum('invalid_count'))['invalid_count__sum'] or 0
+    disposable_emails = VerificationJob.objects.aggregate(Sum('disposable_count'))['disposable_count__sum'] or 0
+    
+    # Calculate anomalies (invalid + disposable)
+    anomalies = invalid_emails + disposable_emails
+    
+    # Fetch recent jobs
+    recent_jobs = VerificationJob.objects.all().order_by('-created_at')[:10]
+    
+    stats = {
+        'total_jobs': total_jobs,
+        'completed_jobs': completed_jobs,
+        'total_emails': total_emails,
+        'anomalies': anomalies,
+        'valid_emails': valid_emails,
+        'invalid_emails': invalid_emails,
+        'disposable_emails': disposable_emails,
+    }
+    
+    # Analytics data for charts
+    analytics = {
+        'job_status': {
+            'completed': completed_jobs,
+            'pending': pending_jobs,
+            'processing': processing_jobs,
+            'failed': failed_jobs,
+        },
+        'email_verification': {
+            'valid': valid_emails,
+            'invalid': invalid_emails,
+            'disposable': disposable_emails,
+        }
+    }
+    
+    return render(request, 'admin.html', {
+        'recent_jobs': recent_jobs,
+        'stats': stats,
+        'analytics': analytics
+    })
+
+def admin_login(request):
+    if request.method == "POST":
+        return redirect('admin_dashboard')
+    return render(request, 'admin_login.html')
+
+
+# ============================================================================
+# EMAIL CAMPAIGN ENDPOINTS (Admin Only)
+# ============================================================================
+
+def email_campaign(request):
+    """
+    Admin page to create and manage email campaigns
+    """
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    context = {}
+    return render(request, 'email_campaign.html', context)
+
+
+class EmailCampaignViewSet(viewsets.ModelViewSet):
+    """
+    API ViewSet for email campaigns
+    Supports: list, create, retrieve, update, destroy, send
+    All logic implemented directly in views (no Celery dependency)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = None  # Set dynamically based on action
+    
+    def get_queryset(self):
+        """Only allow users to see their own campaigns"""
+        user = self.request.user
+        if user.is_staff:
+            return EmailCampaign.objects.all()
+        return EmailCampaign.objects.filter(user=user)
+    
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action"""
+        if self.action == 'create':
+            return EmailCampaignCreateSerializer
+        return EmailCampaignSerializer
+    
+    def create(self, request, *args, **kwargs):
+        """
+        Create campaign from CSV upload with validation
+        """
+        serializer = EmailCampaignCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        subject = serializer.validated_data.get('subject')
+        message = serializer.validated_data.get('message')
+        csv_file = serializer.validated_data.get('csv_file')
+        
+        # Use emails parsed during serializer validation if available
+        emails = getattr(serializer, '_emails', None)
+        if emails is None:
+            # Fallback: parse CSV here (ensure file pointer is at start)
+            import csv
+            import io
+            try:
+                csv_file.seek(0)
+            except Exception:
+                pass
+
+            emails = []
+            try:
+                csv_content = csv_file.read().decode('utf-8')
+                csv_reader = csv.DictReader(io.StringIO(csv_content))
+                for row in csv_reader:
+                    email = row.get('email', '').strip()
+                    if email:
+                        emails.append(email)
+            except Exception as e:
+                logger.error(f"Error parsing CSV: {str(e)}")
+                return Response(
+                    {'error': f'CSV parsing error: {str(e)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_emails = []
+        skipped_count = 0
+        
+        for email in emails:
+            email_lower = email.lower()
+            if email_lower not in seen:
+                unique_emails.append(email)
+                seen.add(email_lower)
+            else:
+                skipped_count += 1
+        
+        if not unique_emails:
+            return Response(
+                {'error': 'No valid emails found in CSV'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create campaign
+        campaign = EmailCampaign.objects.create(
+            user=request.user,
+            subject=subject,
+            message=message,
+            csv_filename=csv_file.name,
+            total_recipients=len(unique_emails),
+            skipped_count=skipped_count,
+            status='draft'
+        )
+        
+        # Create recipient records in batches
+        recipients_to_create = [
+            CampaignRecipient(campaign=campaign, email=email)
+            for email in unique_emails
+        ]
+        CampaignRecipient.objects.bulk_create(recipients_to_create, batch_size=1000)
+        
+        # Log campaign creation
+        CampaignLog.objects.create(
+            campaign=campaign,
+            level='info',
+            message=f"Campaign created with {len(unique_emails)} unique recipients (skipped {skipped_count} duplicates)"
+        )
+        
+        logger.info(f"Campaign {campaign.campaign_id} created with {len(unique_emails)} recipients")
+        
+        return Response(
+            EmailCampaignSerializer(campaign).data,
+            status=status.HTTP_201_CREATED
+        )
+    
+    @action(detail=True, methods=['post'])
+    def send(self, request, pk=None):
+        """
+        Send campaign emails synchronously with progress tracking
+        Implements Brevo API integration, rate limiting, and error handling
+        """
+        campaign = self.get_object()
+        
+        # Validate campaign is in draft status
+        if campaign.status != 'draft':
+            return Response(
+                {'error': f'Campaign cannot be sent. Current status: {campaign.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check that there are recipients
+        pending_recipients = list(
+            CampaignRecipient.objects.filter(
+                campaign=campaign,
+                status='pending'
+            ).values_list('email', flat=True)
+        )
+        
+        if not pending_recipients:
+            return Response(
+                {'error': 'No pending recipients to send to'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update campaign status
+        campaign.status = 'sending'
+        campaign.save(update_fields=['status', 'updated_at'])
+        
+        # Log campaign start
+        CampaignLog.objects.create(
+            campaign=campaign,
+            level='info',
+            message=f"Starting to send campaign '{campaign.subject}' to {len(pending_recipients)} recipients"
+        )
+        
+        # Initialize Brevo client
+        try:
+            brevo_client = BrevoAPIClient()
+        except ValueError as e:
+            campaign.status = 'failed'
+            campaign.error_message = str(e)
+            campaign.save(update_fields=['status', 'error_message', 'updated_at'])
+            CampaignLog.objects.create(
+                campaign=campaign,
+                level='error',
+                message=f"Brevo API configuration error: {str(e)}"
+            )
+            logger.error(f"Brevo API config error for campaign {campaign.campaign_id}: {str(e)}")
+            return Response(
+                {'error': f'Brevo API configuration error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        # Send emails in batches with rate limiting
+        sent_count = 0
+        failed_count = 0
+        # Use campaign-specific settings if available, otherwise defaults
+        try:
+            batch_size = int(getattr(campaign, 'batch_size', 50) or 50)
+        except Exception:
+            batch_size = 50
+        try:
+            delay_between_batches = float(getattr(campaign, 'delay_between_batches', 1.0) or 1.0)
+        except Exception:
+            delay_between_batches = 1.0
+        failed_recipients = []
+        
+        logger.info(f"Starting to send campaign {campaign.campaign_id} to {len(pending_recipients)} recipients")
+        
+        import time
+        
+        for i, email in enumerate(pending_recipients):
+            try:
+                # Send email via Brevo
+                result = brevo_client.send_email(
+                    to_email=email,
+                    subject=campaign.subject,
+                    html_content=campaign.message,
+                    tags=['campaign', f'campaign-{campaign.campaign_id}']
+                )
+                
+                # Get recipient record
+                try:
+                    recipient = CampaignRecipient.objects.get(
+                        campaign=campaign,
+                        email=email
+                    )
+                    
+                    if result.get('success'):
+                        recipient.status = 'sent'
+                        recipient.sent_at = timezone.now()
+                        recipient.brevo_message_id = result.get('message_id')
+                        recipient.save(update_fields=['status', 'sent_at', 'brevo_message_id'])
+                        
+                        sent_count += 1
+                        logger.info(f"Email sent to {email} for campaign {campaign.campaign_id}")
+                    else:
+                            recipient.status = 'failed'
+                            error_msg = result.get('error', 'Unknown error')
+                            recipient.error_message = error_msg
+                            recipient.save(update_fields=['status', 'error_message'])
+
+                            failed_count += 1
+                            failed_recipients.append({'email': email, 'error': error_msg})
+
+                            logger.error(f"Failed to send email to {email}: {error_msg}")
+
+                            # Record full API response in campaign logs to aid debugging
+                            CampaignLog.objects.create(
+                                campaign=campaign,
+                                level='error',
+                                message=f"Failed to send to {email}: {error_msg}",
+                                recipient=recipient
+                            )
+
+                            # Abort early on authentication errors (invalid/missing API key)
+                            try:
+                                lowered = str(error_msg).lower()
+                            except Exception:
+                                lowered = ''
+
+                            if 'unauthorized' in lowered or 'key not found' in lowered or 'invalid api key' in lowered:
+                                campaign.status = 'failed'
+                                campaign.error_message = f'Brevo auth error: {error_msg}'
+                                campaign.save(update_fields=['status', 'error_message', 'updated_at'])
+                                CampaignLog.objects.create(
+                                    campaign=campaign,
+                                    level='error',
+                                    message=f'Aborting campaign due to Brevo auth error: {error_msg}'
+                                )
+                                logger.error(f"Aborting campaign {campaign.campaign_id} due to Brevo auth error: {error_msg}")
+                                # Return response immediately since this is an API action
+                                return Response(
+                                    {'error': 'Brevo authentication error', 'details': error_msg},
+                                    status=status.HTTP_502_BAD_GATEWAY
+                                )
+                
+                except CampaignRecipient.DoesNotExist:
+                    logger.error(f"Recipient record not found for {email} in campaign {campaign.campaign_id}")
+                    failed_count += 1
+                    failed_recipients.append({'email': email, 'error': 'Recipient record not found'})
+                
+                # Update campaign progress and persist counts
+                campaign.sent_count = sent_count
+                campaign.failed_count = failed_count
+                campaign.update_progress()  # This now saves sent_count, failed_count, and progress_percentage
+                
+                # Apply rate limiting between batches
+                if (i + 1) % batch_size == 0 and (i + 1) < len(pending_recipients):
+                    logger.info(f"Batch {(i + 1) // batch_size} complete. Applying rate limit delay...")
+                    time.sleep(delay_between_batches)
+            
+            except Exception as e:
+                logger.error(f"Error sending email to {email}: {str(e)}")
+                failed_count += 1
+                failed_recipients.append({'email': email, 'error': str(e)})
+                
+                try:
+                    recipient = CampaignRecipient.objects.get(
+                        campaign=campaign,
+                        email=email
+                    )
+                    recipient.status = 'failed'
+                    recipient.error_message = str(e)
+                    recipient.save(update_fields=['status', 'error_message'])
+                    
+                    CampaignLog.objects.create(
+                        campaign=campaign,
+                        level='error',
+                        message=f"Exception sending to {email}: {str(e)}",
+                        recipient=recipient
+                    )
+                except CampaignRecipient.DoesNotExist:
+                    pass
+        
+        # Mark campaign as completed and persist all final counts
+        campaign.status = 'completed'
+        campaign.sent_at = timezone.now()
+        campaign.save(update_fields=['status', 'sent_at', 'sent_count', 'failed_count', 'progress_percentage', 'updated_at'])
+        
+        success_msg = f"Campaign completed. Sent: {sent_count}, Failed: {failed_count}"
+        CampaignLog.objects.create(
+            campaign=campaign,
+            level='success',
+            message=success_msg
+        )
+        
+        logger.info(f"Campaign {campaign.campaign_id} sending complete. {success_msg}")
+        
+        return Response(
+            {
+                'status': 'completed',
+                'message': success_msg,
+                'sent': sent_count,
+                'failed': failed_count,
+                'failed_recipients': failed_recipients[:10],  # Limit to first 10 for response
+                'campaign': EmailCampaignSerializer(campaign).data
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    @action(detail=True, methods=['get'])
+    def recipients(self, request, pk=None):
+        """
+        Get recipients for a campaign with optional status filter
+        """
+        campaign = self.get_object()
+        status_filter = request.query_params.get('status')
+        
+        recipients = CampaignRecipient.objects.filter(campaign=campaign)
+        if status_filter:
+            recipients = recipients.filter(status=status_filter)
+        
+        serializer = CampaignRecipientSerializer(recipients, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def logs(self, request, pk=None):
+        """
+        Get logs for a campaign
+        """
+        campaign = self.get_object()
+        logs = CampaignLog.objects.filter(campaign=campaign).order_by('-created_at')
+        
+        serializer = CampaignLogSerializer(logs, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """
+        Cancel a campaign (only if not sent/failed)
+        """
+        campaign = self.get_object()
+        
+        if campaign.status in ['completed', 'failed']:
+            return Response(
+                {'error': f'Cannot cancel campaign in {campaign.status} status'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Delete all pending recipients
+        deleted_count, _ = CampaignRecipient.objects.filter(
+            campaign=campaign,
+            status='pending'
+        ).delete()
+        
+        campaign.status = 'failed'
+        campaign.error_message = 'Campaign cancelled by user'
+        campaign.save(update_fields=['status', 'error_message', 'updated_at'])
+        
+        CampaignLog.objects.create(
+            campaign=campaign,
+            level='info',
+            message=f'Campaign cancelled by user. Deleted {deleted_count} pending recipients.'
+        )
+        
+        logger.info(f"Campaign {campaign.campaign_id} cancelled. Deleted {deleted_count} pending recipients.")
+        
+        return Response(
+            EmailCampaignSerializer(campaign).data,
+            status=status.HTTP_200_OK
+        )

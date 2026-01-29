@@ -226,6 +226,21 @@ VERIFICATION_BATCH_SIZE = 50  # Process emails in batches of 50
 DISPOSABLE_EMAIL_CHECK_ENABLED = True
 
 # ============================================================================
+# BREVO / TRANSACTIONAL EMAIL SETTINGS
+# Set these via environment variables in your .env file. Only `BREVO_API_KEY`
+# is strictly required for sending; sensible defaults are provided for others.
+# ============================================================================
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'Email Campaign')
+# Default sender email - replace with your verified sender in production
+BREVO_SENDER_EMAIL = os.getenv('BREVO_SENDER_EMAIL', 'noreply@example.com')
+BREVO_REPLY_TO = os.getenv('BREVO_REPLY_TO', '')
+
+# Optional defaults for campaign sending
+BREVO_DEFAULT_BATCH_SIZE = int(os.getenv('BREVO_DEFAULT_BATCH_SIZE', '50'))
+BREVO_DEFAULT_DELAY_BETWEEN_BATCHES = float(os.getenv('BREVO_DEFAULT_DELAY_BETWEEN_BATCHES', '1.0'))
+
+# ============================================================================
 # DRF CONFIGURATION
 # ============================================================================
 REST_FRAMEWORK = {

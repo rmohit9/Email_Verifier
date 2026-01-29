@@ -5,6 +5,7 @@ from . import views
 # Create DRF Router
 router = DefaultRouter()
 router.register(r'jobs', views.VerificationJobViewSet, basename='verificationjob')
+router.register(r'campaigns', views.EmailCampaignViewSet, basename='emailcampaign')
 
 urlpatterns = [
     # --- HTML Page Routes ---
@@ -20,12 +21,14 @@ urlpatterns = [
     path('user/', views.user_dashboard, name='user_dashboard'),
     path('settings/', views.settings_page, name='settings'),
     path('logs/', views.logs, name='logs'),
+    path('email-campaign/', views.email_campaign, name='email_campaign'),
     path('privacy/', views.privacy, name='privacy'),
     path('terms/', views.terms, name='terms'),
     path('cookie/', views.cookie, name='cookie'),
     
     # --- DRF API Routes ---
     # This includes /api/jobs/, /api/jobs/{id}/results/, /api/jobs/{id}/download/
+    # Also includes /api/campaigns/, /api/campaigns/{id}/send/, /api/campaigns/{id}/recipients/, etc.
     path('api/', include(router.urls)),
     
     # Single verify endpoint
