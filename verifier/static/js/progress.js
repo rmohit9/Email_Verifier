@@ -15,7 +15,7 @@ const invalidEl = document.getElementById("invalidEmails");
 const riskyEl = document.getElementById("riskyEmails");
 
 const logBody = document.getElementById("logBody");
-const viewResultsBtn = document.getElementById("viewResultsBtn"); 
+const viewResultsBtn = document.getElementById("viewResultsBtn");
 
 /* =========================================================
    STATE
@@ -45,8 +45,8 @@ async function checkProgress() {
 
     if (!res.ok) {
       if (res.status === 404) {
-        if(currentStepEl) currentStepEl.textContent = "Job not found (Expired?)";
-        return; 
+        if (currentStepEl) currentStepEl.textContent = "Job not found (Expired?)";
+        return;
       }
       throw new Error("API Error");
     }
@@ -59,11 +59,11 @@ async function checkProgress() {
       finalize(data);
     } else {
       // Poll again in 1 second
-      setTimeout(checkProgress, 1000); 
+      setTimeout(checkProgress, 1000);
     }
   } catch (err) {
     console.error("Polling error:", err);
-    if(currentStepEl) currentStepEl.textContent = "Connection Error...";
+    if (currentStepEl) currentStepEl.textContent = "Connection Error...";
     setTimeout(checkProgress, 3000); // Retry slower
   }
 }
@@ -79,26 +79,38 @@ function updateUI(data) {
 
   if (processedEl) processedEl.textContent = processed;
   if (totalEl) totalEl.textContent = total;
-  
+
   // Note: Test Mode might not send live valid/invalid counts until the end
   if (validEl) validEl.textContent = data.valid_count !== undefined ? data.valid_count : "--";
   if (invalidEl) invalidEl.textContent = data.invalid_count !== undefined ? data.invalid_count : "--";
 
-  // Update Bar
+  // Update Status Text
   if (progressBar) progressBar.style.width = `${percentage}%`;
   if (progressPercentEl) progressPercentEl.textContent = `${Math.round(percentage)}%`;
 
-  // Update Status Text
-  if (currentStepEl) {
-      if (data.status === 'processing') {
-          currentStepEl.textContent = "Verifying Emails...";
-          currentStepEl.className = "text-blue-600 font-medium";
-      } else if (data.status === 'completed') {
-          currentStepEl.textContent = "Completed";
-          currentStepEl.className = "text-green-600 font-bold";
-      } else {
-          currentStepEl.textContent = data.status.toUpperCase();
-      }
+  // --- NEW PIPELINE VISUAL LOGIC ---
+
+  // 1. Syntax & Disposable are practically instant (0-5%)
+  if (percentage >= 0) {
+    markStepCompleted("Syntax Validation");
+    markStepCompleted("Disposable Detection");
+  }
+
+  // 2. Domain & MX happen next (5-15%)
+  if (percentage > 5) {
+    markStepCompleted("Domain Check");
+    markStepRunning("MX Record Lookup");
+  }
+
+  // 3. MX is done, SMTP starts (15%+)
+  if (percentage > 15) {
+    markStepCompleted("MX Record Lookup");
+    markStepRunning("SMTP Handshake");
+  }
+
+  // 4. Finished
+  if (percentage >= 100) {
+    markStepCompleted("SMTP Handshake");
   }
 }
 
@@ -106,13 +118,13 @@ function finalize(data) {
   if (data.status === "completed") {
     // Show results button if it exists
     if (viewResultsBtn) {
-        viewResultsBtn.disabled = false;
-        viewResultsBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      viewResultsBtn.disabled = false;
+      viewResultsBtn.classList.remove("opacity-50", "cursor-not-allowed");
     }
-    
+
     // Auto-redirect to results after short delay
     setTimeout(() => {
-        window.location.href = "/verification-results/";
+      window.location.href = "/verification-results/";
     }, 1000);
   } else {
     alert("Job Failed: " + (data.error_message || "Unknown error"));
@@ -121,3 +133,21 @@ function finalize(data) {
 
 // Start polling
 checkProgress();
+
+function markStepCompleted(stepName) {
+  const el = document.querySelector(`[data-step="${stepName}"] .status`);
+  if (el) {
+    el.textContent = "Completed";
+    el.className = "status success";
+    el.previousElementSibling.previousElementSibling.className = "pipeline-icon pipeline-completed";
+  }
+}
+
+function markStepRunning(stepName) {
+  const el = document.querySelector(`[data-step="${stepName}"] .status`);
+  if (el) {
+    el.textContent = "Running";
+    el.className = "status running";
+    el.previousElementSibling.previousElementSibling.className = "pipeline-icon pipeline-running";
+  }
+}

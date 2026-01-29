@@ -190,7 +190,10 @@ CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
 #     'verifier.views.verify_single_email_api': {'rate_limit': '10/m'},
 # }
 
-CELERY_TASK_ROUTES = {}
+CELERY_TASK_ROUTES = {
+    'verifier.views.process_email_chunk': {'queue': 'email_verification'},
+    'verifier.views.cleanup_old_jobs': {'queue': 'email_verification'},
+}
 
 # Default queue
 CELERY_TASK_DEFAULT_QUEUE = 'default'
@@ -208,7 +211,7 @@ CELERY_TASK_ANNOTATIONS = {
 
 # SMTP Verification Settings
 SMTP_TIMEOUT = 10  # seconds
-SMTP_CHECK_ENABLED = True
+SMTP_CHECK_ENABLED = False
 
 # DNS Settings
 DNS_TIMEOUT = 2.0  # seconds
@@ -234,5 +237,18 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny', 
-    ]
+    ],
+    # --- NEW: RATE LIMITING ---
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle', # Enable Scoped Throttling
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        # CHANGE THESE VALUES:
+        'anon': '1000/minute',      # Was 10/min (Guests)
+        'user': '5000/minute',      # Was 120/min (Logged in users)
+        'uploads': '1000/minute',   # Was 5/min (File uploads)
+        'verifications': '1000/minute' # Was 20/min (Single verifications)
+    }
 }

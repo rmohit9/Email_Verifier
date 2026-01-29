@@ -2,11 +2,17 @@ from rest_framework import serializers
 from .models import VerificationJob, EmailResult
 
 class VerificationJobSerializer(serializers.ModelSerializer):
+    # Add calculated fields for the UI cards
+    disposable_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = VerificationJob
         fields = '__all__'
-        # Added processed/valid/invalid counts to read_only so frontend can't fake them
-        read_only_fields = ['job_id', 'status', 'progress_percentage', 'created_at', 'completed_at', 'total_count', 'processed_count', 'valid_count', 'invalid_count', 'user']
+        read_only_fields = ['job_id', 'status', 'progress_percentage', 'created_at', 'completed_at', 'total_count', 'processed_count', 'valid_count', 'invalid_count', 'disposable_count','user']
+
+    def get_disposable_count(self, obj):
+        # Count results flagged as disposable
+        return obj.results.filter(is_disposable=True).count()
 
 class EmailResultSerializer(serializers.ModelSerializer):
     class Meta:

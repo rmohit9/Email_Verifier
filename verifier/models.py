@@ -20,6 +20,7 @@ class VerificationJob(models.Model):
     processed_count = models.IntegerField(default=0)
     valid_count = models.IntegerField(default=0)
     invalid_count = models.IntegerField(default=0)
+    disposable_count = models.IntegerField(default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     progress_percentage = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -53,6 +54,7 @@ class EmailResult(models.Model):
     STATUS_CHOICES = [
         ('valid', 'Valid'),
         ('invalid', 'Invalid'),
+        ('disposable', 'Disposable'),
         ('risky', 'Risky'),
         ('unknown', 'Unknown'),
     ]

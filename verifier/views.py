@@ -4,11 +4,13 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.db.models import F
 
 # --- DRF Imports ---
 from rest_framework import viewsets, status, views, permissions, parsers
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.throttling import ScopedRateThrottle
 
 # --- Local Imports ---
 from .models import VerificationJob, EmailResult
@@ -27,6 +29,52 @@ from django.utils import timezone
 from datetime import timedelta
 import csv
 import io
+import smtplib
+import socket
+import requests
+
+
+# ============================================================================
+# 0. GLOBAL DATA (Disposable Domains)
+# ============================================================================
+
+# GitHub Raw URL for the blocklist
+DISPOSABLE_LIST_URL = "https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/master/disposable_email_blocklist.conf"
+DISPOSABLE_DOMAINS_CACHE = set()
+
+def load_disposable_domains():
+    """ Fetches the blocklist from GitHub and MERGES it with our fallback list. """
+    global DISPOSABLE_DOMAINS_CACHE
+    if DISPOSABLE_DOMAINS_CACHE:
+        return DISPOSABLE_DOMAINS_CACHE
+
+    print("DEBUG: Fetching disposable domains from GitHub...")
+    
+    # 1. Define Fallback List (Always keep these active)
+    fallback_domains = {
+        'mailinator.com', 'guerrillamail.com', '10minutemail.com', 'yopmail.com',
+        'tempmail.com', 'temp-mail.org', 'throwawaymail.com', 'sharklasers.com',
+        'getairmail.com', 'mailfa.com', 'mytemp.email'
+    }
+
+    try:
+        response = requests.get(DISPOSABLE_LIST_URL, timeout=5)
+        if response.status_code == 200:
+            github_domains = {line.strip().lower() for line in response.text.splitlines() if line.strip()}
+            
+            # 2. MERGE LISTS (GitHub + Fallback)
+            DISPOSABLE_DOMAINS_CACHE = github_domains.union(fallback_domains)
+            
+            print(f"DEBUG: Successfully loaded {len(DISPOSABLE_DOMAINS_CACHE)} disposable domains (GitHub + Fallback).")
+        else:
+            print(f"DEBUG ERROR: GitHub returned {response.status_code}. Using fallback.")
+            DISPOSABLE_DOMAINS_CACHE = fallback_domains
+            
+    except Exception as e:
+        print(f"DEBUG ERROR [Disposable Fetch]: {str(e)}")
+        DISPOSABLE_DOMAINS_CACHE = fallback_domains
+    
+    return DISPOSABLE_DOMAINS_CACHE
 
 # ============================================================================
 # 1. AUTHENTICATION VIEWS
@@ -87,6 +135,7 @@ def signup(request):
             return redirect('upload')
             
         except Exception as e:
+            print(f"DEBUG ERROR [Signup]: {str(e)}")
             messages.error(request, f"Error creating account: {str(e)}")
 
     return render(request, 'signup.html')
@@ -96,13 +145,11 @@ def logout_view(request):
     return redirect('home')
 
 # ============================================================================
-# 2. VERIFICATION LOGIC (STEPS 1-3)
+# 2. VERIFICATION LOGIC
 # ============================================================================
 
 def get_resolver():
-    """ Configure reliable DNS resolver using values from settings.py """
     resolver = dns.resolver.Resolver()
-    # resolver.nameservers = settings.DNS_NAMESERVERS
     resolver.timeout = settings.DNS_TIMEOUT
     resolver.lifetime = settings.DNS_LIFETIME
     return resolver
@@ -112,42 +159,77 @@ def verify_syntax(email):
         v = validate_email(email, check_deliverability=False)
         return {"valid": True, "reason": "Syntax is valid", "email": v.normalized, "domain": v.domain}
     except EmailNotValidError as e:
+        print(f"DEBUG ERROR [Syntax]: {str(e)} for email '{email}'")
         return {"valid": False, "reason": f"Syntax Error: {str(e)}", "email": email, "domain": None}
+
+def verify_disposable(domain):
+    """ Step 2: Checks if domain is in the GitHub blocklist. """
+    blocked_domains = load_disposable_domains() # Uses cache
+    if domain in blocked_domains:
+        return {"valid": False, "reason": "Disposable/Temporary Email Detected"}
+    return {"valid": True, "reason": "Safe Domain"}
 
 def verify_domain(domain):
     if not domain: return {"valid": False, "reason": "No domain"}
     try:
-        resolver = get_resolver()
-        resolver.resolve(domain, 'NS')
+        get_resolver().resolve(domain, 'NS')
         return {"valid": True, "reason": "Domain exists"}
     except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+        print(f"DEBUG ERROR [Domain DNS]: NXDOMAIN/NoAnswer for '{domain}'")
         return {"valid": False, "reason": "Domain does not exist"}
-    except dns.resolver.Timeout:
-        return {"valid": False, "reason": "DNS Timeout"}
     except Exception as e:
+        print(f"DEBUG ERROR [Domain DNS]: {str(e)} for '{domain}'")
         return {"valid": False, "reason": f"DNS Error: {str(e)}"}
 
 def verify_mx(domain):
     try:
-        resolver = get_resolver()
-        answers = resolver.resolve(domain, 'MX')
+        answers = get_resolver().resolve(domain, 'MX')
         mx_records = sorted([str(r.exchange).rstrip('.') for r in answers])
-        if not mx_records:
+        if not mx_records: 
+            print(f"DEBUG ERROR [MX]: No MX records returned for '{domain}'")
             return {"valid": False, "reason": "No MX records", "mx_records": []}
         return {"valid": True, "reason": "MX records found", "mx_records": mx_records}
-    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
-        return {"valid": False, "reason": "No MX records", "mx_records": []}
     except Exception as e:
-        return {"valid": False, "reason": f"MX Error: {str(e)}", "mx_records": []}
+        print(f"DEBUG ERROR [MX]: {str(e)} for '{domain}'")
+        return {"valid": False, "reason": "No MX records", "mx_records": []}
+
+def smtp_check_advanced(email, sender_email='verify@example.com'):
+    """ Debug-enabled SMTP Check """
+    try:
+        domain = email.split('@')[1]
+        mx_records = sorted(dns.resolver.resolve(domain, 'MX'), key=lambda r: r.preference)
+        
+        for mx in mx_records:
+            mx_host = str(mx.exchange).rstrip('.')
+            print(f"  -> Connecting to MX: {mx_host}...") 
+            try:
+                with smtplib.SMTP(mx_host, 25, timeout=3) as server:
+                    server.ehlo()
+                    server.mail(sender_email) 
+                    code, message = server.rcpt(email)
+                    if code == 250: return True, "Valid (250 OK)"
+                    elif code == 550: return False, "User not found (550)"
+                    else: return False, f"Server responded: {code}"
+            except Exception as e:
+                print(f"  -> DEBUG ERROR [SMTP Connect] on {mx_host}: {e}")
+                continue
+        return False, "Connection Failed"
+    except Exception as e:
+        print(f"DEBUG ERROR [SMTP Setup]: {str(e)}")
+        return False, f"DNS Error: {str(e)}"
 
 def run_verification_pipeline(email):
-    """ Orchestrates Steps 1, 2, and 3 for a single email. """
+    """ 
+    PIPELINE ORDER: Syntax -> Disposable -> Domain -> MX -> SMTP 
+    """
     result = {
         "email": email, "normalized_email": email, "domain": "",
         "syntax_valid": False, "domain_exists": False, "mx_records_found": False,
-        "mx_records": [], "status": "invalid", "reason": ""
+        "mx_records": [], "status": "invalid", "reason": "",
+        "is_disposable": False
     }
 
+    # 1. Syntax
     s1 = verify_syntax(email)
     result['syntax_valid'] = s1['valid']
     result['reason'] = s1['reason']
@@ -156,18 +238,39 @@ def run_verification_pipeline(email):
     result['normalized_email'] = s1['email']
     result['domain'] = s1['domain']
 
-    s2 = verify_domain(s1['domain'])
-    result['domain_exists'] = s2['valid']
-    result['reason'] = s2['reason']
-    if not s2['valid']: return result
+    # 2. Disposable Check (Fail Fast, but mark as DISPOSABLE)
+    s2 = verify_disposable(result['domain'])
+    if not s2['valid']:
+        result['status'] = "disposable"  # <--- NEW STATUS
+        result['reason'] = s2['reason']
+        result['is_disposable'] = True
+        return result
 
-    s3 = verify_mx(s1['domain'])
-    result['mx_records_found'] = s3['valid']
+    # 3. Domain Check
+    s3 = verify_domain(result['domain'])
+    result['domain_exists'] = s3['valid']
     result['reason'] = s3['reason']
-    result['mx_records'] = s3['mx_records']
-    
-    if s3['valid']:
+    if not s3['valid']: return result
+
+    # 4. MX Check
+    s4 = verify_mx(result['domain'])
+    result['mx_records_found'] = s4['valid']
+    result['reason'] = s4['reason']
+    result['mx_records'] = s4['mx_records']
+    if not s4['valid']: return result
+
+    # 5. SMTP Handshake
+    if getattr(settings, 'SMTP_CHECK_ENABLED', False):
+        is_smtp_valid, smtp_reason = smtp_check_advanced(result['normalized_email'])
+        if is_smtp_valid:
+            result['status'] = "valid"
+            result['reason'] = "Verified via SMTP"
+        else:
+            result['status'] = "invalid" 
+            result['reason'] = f"SMTP Verification Failed: {smtp_reason}"
+    else:
         result['status'] = "valid"
+        result['reason'] = "Valid (MX Record Found)"
     
     return result
 
@@ -176,64 +279,46 @@ def run_verification_pipeline(email):
 # ============================================================================
 
 @shared_task
-def process_email_bulk(job_id, emails):
-    """ Background task to process emails and SAVE TO DB. """
+def process_email_chunk(job_id, emails_chunk):
+    """ Process emails and update DB counts correctly """
     try:
         job = VerificationJob.objects.get(job_id=job_id)
-        job.status = 'processing'
-        job.save()
+        load_disposable_domains() 
 
-        results_to_create = []
-        valid_count = 0
-        invalid_count = 0
-        total = len(emails)
-        
-        # FIX: Update every 1 email if list is small, otherwise every 10
-        update_interval = 1 if total < 100 else 10
-
-        for i, email in enumerate(emails):
+        for email in emails_chunk:
+            print(f"Processing: {email}...") 
             data = run_verification_pipeline(email)
             
-            if data['status'] == 'valid':
-                valid_count += 1
-            else:
-                invalid_count += 1
+            # Update correct counters
+            if data['status'] == 'valid': 
+                job.valid_count += 1
+            elif data['status'] == 'disposable': 
+                job.disposable_count += 1    # <--- NEW COUNTER
+            else: 
+                job.invalid_count += 1
+            
+            job.processed_count += 1
 
-            results_to_create.append(EmailResult(
-                job=job,
-                email=email,
-                normalized_email=data.get('normalized_email'),
-                domain=data.get('domain'),
-                status=data.get('status'),
-                syntax_valid=data.get('syntax_valid'),
-                domain_exists=data.get('domain_exists'),
-                mx_records_found=data.get('mx_records_found'),
-                mx_records=data.get('mx_records'),
-                reason=data.get('reason')
-            ))
+            EmailResult.objects.create(
+                job=job, email=email, normalized_email=data.get('normalized_email'),
+                domain=data.get('domain'), 
+                status=data.get('status'), # Save 'disposable' status
+                syntax_valid=data.get('syntax_valid'), domain_exists=data.get('domain_exists'),
+                mx_records_found=data.get('mx_records_found'), mx_records=data.get('mx_records'),
+                reason=data.get('reason'), verified_at=timezone.now(),
+                is_disposable=data.get('is_disposable', False)
+            )
 
-            # Update Progress in DB
-            job.processed_count = i + 1
-            if job.processed_count % update_interval == 0 or job.processed_count == total:
-                job.progress_percentage = (job.processed_count / total) * 100
-                job.save()
-
-        EmailResult.objects.bulk_create(results_to_create)
-
-        job.valid_count = valid_count
-        job.invalid_count = invalid_count
-        job.processed_count = total
-        job.progress_percentage = 100.0
-        job.status = 'completed'
-        job.completed_at = timezone.now()
-        job.save()
-
-    except Exception as e:
-        if 'job' in locals():
-            job.status = 'failed'
-            job.error_message = str(e)
+            if job.total_count > 0:
+                job.progress_percentage = (job.processed_count / job.total_count) * 100
+            
+            if job.processed_count >= job.total_count:
+                job.status = 'completed'; job.completed_at = timezone.now(); job.progress_percentage = 100.0
+            
             job.save()
-        print(f"Error in background task: {e}")
+            
+    except Exception as e:
+        print(f"CRITICAL ERROR in chunk processing: {str(e)}")
 
 @shared_task
 def cleanup_old_jobs(days=30):
@@ -247,6 +332,8 @@ def cleanup_old_jobs(days=30):
 class SingleVerifyView(views.APIView):
     """ API Endpoint to verify a single email instantly. """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'verifications'  # 20/minute
 
     def post(self, request):
         serializer = SingleVerifySerializer(data=request.data)
@@ -264,6 +351,17 @@ class VerificationJobViewSet(viewsets.ModelViewSet):
     serializer_class = VerificationJobSerializer
     parser_classes = (parsers.JSONParser, parsers.MultiPartParser, parsers.FormParser)
 
+    def get_throttles(self):
+        """
+        Dynamically assign throttle scopes based on the action.
+        """
+        if self.action == 'create':
+            self.throttle_scope = 'uploads'  # Strict limit (5/min)
+        else:
+            self.throttle_scope = 'user'     # Loose limit (120/min) for polling
+            
+        return super().get_throttles()
+
     def get_queryset(self):
         # Users see only their jobs; Staff see all
         user = self.request.user
@@ -272,9 +370,10 @@ class VerificationJobViewSet(viewsets.ModelViewSet):
         return super().get_queryset()
 
     def create(self, request, *args, **kwargs):
-        """ Handles File Upload and saves to DB """
+        """ Handles File Upload and dispatches chunks to Celery """
         serializer = BulkVerifySerializer(data=request.data)
         if not serializer.is_valid():
+            print(f"DEBUG ERROR [Upload Validation]: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         emails = serializer.validated_data.get('emails', [])
@@ -294,22 +393,30 @@ class VerificationJobViewSet(viewsets.ModelViewSet):
                 else:
                     return Response({"error": "Only .csv or .txt supported"}, status=400)
             except Exception as e:
+                print(f"DEBUG ERROR [File Read]: {str(e)}")
                 return Response({"error": f"File read error: {str(e)}"}, status=400)
 
         emails = list(set(emails))
+        total_emails = len(emails)
+
         if not emails:
             return Response({"error": "No valid emails found."}, status=400)
 
-        # CREATE JOB IN DATABASE
+        # CREATE JOB IN DATABASE (Start at 0 processed)
         job = VerificationJob.objects.create(
             user=request.user if request.user.is_authenticated else None,
             filename=filename,
-            total_count=len(emails),
-            status='pending'
+            total_count=total_emails,
+            status='pending',
+            processed_count=0 
         )
 
-        # Trigger Celery (Persistent Mode)
-        process_email_bulk.delay(str(job.job_id), emails)
+        # --- CHUNKING LOGIC ---
+        BATCH_SIZE = 50 # Safe size for small worker memory
+        for i in range(0, total_emails, BATCH_SIZE):
+            chunk = emails[i : i + BATCH_SIZE]
+            process_email_chunk.delay(str(job.job_id), chunk)
+        # ----------------------
 
         job_serializer = self.get_serializer(job)
         return Response(job_serializer.data, status=status.HTTP_201_CREATED)
