@@ -682,6 +682,8 @@ def terms(request): return render(request, 'termandcondition.html')
 def cookie(request): return render(request, 'cookie.html')
 
 def admin_dashboard(request):
+    if not request.user.is_staff:
+        return redirect('home')
     from django.db.models import Sum, Count
     
     # Fetch basic stats
@@ -1073,15 +1075,24 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def recipients(self, request, pk=None):
         """
-        Get recipients for a campaign with optional status filter
+        Get recipients for a campaign with optional status filter, search, and pagination
         """
         campaign = self.get_object()
         status_filter = request.query_params.get('status')
+        search = request.query_params.get('search')
         
-        recipients = CampaignRecipient.objects.filter(campaign=campaign)
+        recipients = CampaignRecipient.objects.filter(campaign=campaign).order_by('id')
         if status_filter:
             recipients = recipients.filter(status=status_filter)
+        if search:
+            recipients = recipients.filter(email__icontains=search)
         
+        # Paginate results using DRF pagination if configured
+        page = self.paginate_queryset(recipients)
+        if page is not None:
+            serializer = CampaignRecipientSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = CampaignRecipientSerializer(recipients, many=True)
         return Response(serializer.data)
     
@@ -1093,9 +1104,108 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         campaign = self.get_object()
         logs = CampaignLog.objects.filter(campaign=campaign).order_by('-created_at')
         
+        # Optional search + status filter
+        search = request.query_params.get('search')
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            logs = logs.filter(recipient__status=status_filter)
+        if search:
+            logs = logs.filter(message__icontains=search) | logs.filter(recipient__email__icontains=search)
+
+        # Paginate if available
+        page = self.paginate_queryset(logs)
+        if page is not None:
+            serializer = CampaignLogSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = CampaignLogSerializer(logs, many=True)
         return Response(serializer.data)
-    
+
+    @action(detail=True, methods=['patch'], url_path=r'logs/(?P<log_id>[^/.]+)')
+    def edit_log(self, request, pk=None, log_id=None):
+        """Edit a specific campaign log (level/message)"""
+        campaign = self.get_object()
+        if not (request.user.is_staff or campaign.user == request.user):
+            return Response({'detail': 'Not permitted'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            log = CampaignLog.objects.get(campaign=campaign, id=log_id)
+        except CampaignLog.DoesNotExist:
+            return Response({'detail': 'Log not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CampaignLogSerializer(log, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        # Only allow updating level and message
+        allowed = {}
+        if 'level' in serializer.validated_data:
+            allowed['level'] = serializer.validated_data['level']
+        if 'message' in serializer.validated_data:
+            allowed['message'] = serializer.validated_data['message']
+        for k, v in allowed.items():
+            setattr(log, k, v)
+        if allowed:
+            log.save(update_fields=list(allowed.keys()))
+        return Response(CampaignLogSerializer(log).data)
+
+    @action(detail=True, methods=['delete'], url_path=r'logs/(?P<log_id>[^/.]+)')
+    def delete_log(self, request, pk=None, log_id=None):
+        """Delete a specific campaign log"""
+        campaign = self.get_object()
+        if not (request.user.is_staff or campaign.user == request.user):
+            return Response({'detail': 'Not permitted'}, status=status.HTTP_403_FORBIDDEN)
+        deleted, _ = CampaignLog.objects.filter(campaign=campaign, id=log_id).delete()
+        if deleted:
+            return Response({'deleted': deleted})
+        return Response({'detail': 'Log not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], url_path='logs/bulk_delete')
+    def logs_bulk_delete(self, request, pk=None):
+        """Bulk delete logs for this campaign"""
+        campaign = self.get_object()
+        if not (request.user.is_staff or campaign.user == request.user):
+            return Response({'detail': 'Not permitted'}, status=status.HTTP_403_FORBIDDEN)
+        ids = request.data.get('ids', [])
+        if not isinstance(ids, list):
+            return Response({'error': 'ids must be a list of integers'}, status=status.HTTP_400_BAD_REQUEST)
+        deleted, _ = CampaignLog.objects.filter(campaign=campaign, id__in=ids).delete()
+        return Response({'deleted': deleted})
+
+    @action(detail=True, methods=['get'], url_path='recipients/export')
+    def export_recipients(self, request, pk=None):
+        """Export campaign recipients as CSV"""
+        campaign = self.get_object()
+        if not (request.user.is_staff or campaign.user == request.user):
+            return Response({'detail': 'Not permitted'}, status=status.HTTP_403_FORBIDDEN)
+
+        recipients = CampaignRecipient.objects.filter(campaign=campaign).order_by('id')
+        response = HttpResponse(content_type='text/csv')
+        filename = f'recipients_campaign_{campaign.campaign_id}.csv'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Email', 'Status', 'Error Message', 'Sent At', 'Brevo Message ID'])
+        for r in recipients:
+            writer.writerow([r.email, r.status, r.error_message or '', r.sent_at.isoformat() if r.sent_at else '', r.brevo_message_id or ''])
+        return response
+
+    @action(detail=True, methods=['get'], url_path='logs/export')
+    def export_logs(self, request, pk=None):
+        """Export campaign logs as CSV"""
+        campaign = self.get_object()
+        if not (request.user.is_staff or campaign.user == request.user):
+            return Response({'detail': 'Not permitted'}, status=status.HTTP_403_FORBIDDEN)
+
+        logs = CampaignLog.objects.filter(campaign=campaign).order_by('-created_at')
+        response = HttpResponse(content_type='text/csv')
+        filename = f'logs_campaign_{campaign.campaign_id}.csv'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Log ID', 'Level', 'Message', 'Recipient Email', 'Recipient Status', 'Recipient Error', 'Created At'])
+        for l in logs:
+            rec = l.recipient
+            writer.writerow([l.id, l.level, l.message, rec.email if rec else '', rec.status if rec else '', rec.error_message if rec else '', l.created_at.isoformat() if l.created_at else ''])
+        return response
+
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         """
@@ -1131,3 +1241,64 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
             EmailCampaignSerializer(campaign).data,
             status=status.HTTP_200_OK
         )
+
+
+class CampaignLogAdminViewSet(viewsets.ModelViewSet):
+    """Admin API for viewing and managing all campaign logs (staff only)"""
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = CampaignLogSerializer
+    queryset = CampaignLog.objects.all().order_by('-created_at')
+
+    def get_queryset(self):
+        qs = CampaignLog.objects.all().order_by('-created_at')
+        search = self.request.query_params.get('search')
+        status_filter = self.request.query_params.get('status')
+        campaign_id = self.request.query_params.get('campaign')
+        if campaign_id:
+            qs = qs.filter(campaign__campaign_id=campaign_id)
+        if status_filter:
+            qs = qs.filter(recipient__status=status_filter)
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(message__icontains=search) |
+                Q(campaign__subject__icontains=search) |
+                Q(recipient__email__icontains=search)
+            )
+        return qs
+
+    @action(detail=False, methods=['post'], url_path='bulk_delete')
+    def bulk_delete(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'Not permitted'}, status=status.HTTP_403_FORBIDDEN)
+        ids = request.data.get('ids', [])
+        if not isinstance(ids, list):
+            return Response({'error': 'ids must be a list'}, status=status.HTTP_400_BAD_REQUEST)
+        deleted, _ = CampaignLog.objects.filter(id__in=ids).delete()
+        return Response({'deleted': deleted})
+
+    @action(detail=False, methods=['get'], url_path='export')
+    def export(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'Not permitted'}, status=status.HTTP_403_FORBIDDEN)
+
+        logs = self.get_queryset()
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="campaign_logs_export.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Log ID', 'Campaign Subject', 'Level', 'Message', 'Recipient Email', 'Recipient Status', 'Recipient Error', 'Created At'])
+        for l in logs:
+            rec = l.recipient
+            writer.writerow([
+                l.id,
+                l.campaign.subject if l.campaign else '',
+                l.level,
+                l.message,
+                rec.email if rec else '',
+                rec.status if rec else '',
+                rec.error_message if rec else '',
+                l.created_at.isoformat() if l.created_at else ''
+            ])
+        return response
+

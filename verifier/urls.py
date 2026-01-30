@@ -6,6 +6,7 @@ from . import views
 router = DefaultRouter()
 router.register(r'jobs', views.VerificationJobViewSet, basename='verificationjob')
 router.register(r'campaigns', views.EmailCampaignViewSet, basename='emailcampaign')
+router.register(r'campaign-logs', views.CampaignLogAdminViewSet, basename='campaignlog')
 
 urlpatterns = [
     # --- HTML Page Routes ---
