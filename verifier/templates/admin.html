@@ -35,7 +35,9 @@
     <a href="{% url 'admin_dashboard' %}" class="sidebar-link active">Dashboard</a>
     <a href="{% url 'user_dashboard' %}" class="sidebar-link">Users</a>
     <a href="{% url 'logs' %}" class="sidebar-link">Logs</a>
+    {% if request.user.is_staff %}
     <a href="{% url 'email_campaign' %}" class="sidebar-link">Email Campaigns</a>
+    {% endif %}
     <a href="{% url 'settings' %}" class="sidebar-link">Settings</a>
   </nav>
 

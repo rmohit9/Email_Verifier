@@ -101,11 +101,12 @@
 							<th class="p-3 text-center">Invalid</th>
 							<th class="p-3 text-center">Disposable</th>
 							<th class="p-3 text-center">Progress</th>
+							<th class="p-3 text-right">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
 						{% for job in logs %}
-							<tr class="border-t hover:bg-slate-50">
+							<tr class="border-t hover:bg-slate-50" data-id="{{ job.id }}">
 								<td class="p-3 text-slate-700 font-mono text-xs">{{ job.job_id }}</td>
 								<td class="p-3 text-slate-700">{{ job.filename|default:"—" }}</td>
 								<td class="p-3">
@@ -178,6 +179,31 @@ window.addEventListener('DOMContentLoaded', () => {
 	const jobInput = document.querySelector('#logsForm input[name="job_id"]');
 	if (searchBtn && jobInput && jobInput.value && jobInput.value.trim().length > 0) {
 		searchBtn.focus({preventScroll:true});
+	}
+
+	// Inject actions column (Export/Delete) for each job row using the numeric PK stored in data-id
+	try {
+		document.querySelectorAll('#logsContainer table tbody tr[data-id]').forEach(tr => {
+			const id = tr.dataset.id;
+			const td = document.createElement('td');
+			td.className = 'p-3 text-right';
+			td.innerHTML = `<a href="/api/jobs/${id}/download/" class="px-3 py-1 bg-green-100 text-green-800 rounded mr-2">Export</a><button type="button" class="delete-job-btn px-3 py-1 bg-red-100 text-red-800 rounded" data-id="${id}">Delete</button>`;
+			tr.appendChild(td);
+		});
+
+		// Attach delete handler
+		document.addEventListener('click', (e) => {
+			if (e.target && e.target.matches('.delete-job-btn')) {
+				const id = e.target.dataset.id;
+				if (!confirm('Delete this job?')) return;
+				fetch(`/api/jobs/${id}/`, { method: 'DELETE', headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value } })
+					.then(r => {
+						if (r.ok) location.reload(); else alert('Failed to delete job');
+					});
+			}
+		});
+	} catch (err) {
+		// ignore if DOM not ready
 	}
 });
 </script>

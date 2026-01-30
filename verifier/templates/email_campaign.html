@@ -44,8 +44,16 @@
 			<p class="text-slate-500 text-lg">Create and send email campaigns to your audience. Upload CSV or paste emails manually.</p>
 		</div>
 
+			<!-- Tab Controls -->
+			<div class="mb-4">
+			  <div class="flex gap-3">
+			    <button id="tabBtnCreate" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Create Email Campaign</button>
+			    <button id="tabBtnRecent" class="px-4 py-2 bg-white border rounded-md">Recent Campaigns</button>
+			  </div>
+			</div>
+
 			<!-- Campaign Form Card -->
-			<div class="bg-white rounded-lg shadow-md p-8 border border-slate-200">
+			<div id="createCard" class="bg-white rounded-lg shadow-md p-8 border border-slate-200">
 
 				<form id="campaignForm" enctype="multipart/form-data" class="space-y-6">
 					{% csrf_token %}
@@ -207,7 +215,7 @@
 			</div>
 
 			<!-- Sent Campaigns List -->
-			<div class="mt-8 bg-white rounded-lg shadow-md p-8 border border-slate-200">
+			<div id="recentCard" class="mt-8 bg-white rounded-lg shadow-md p-8 border border-slate-200 hidden">
 				<h2 class="text-xl font-semibold text-slate-800 mb-4">Recent Campaigns</h2>
 
 				<div id="campaignsLoader" class="text-center py-8 text-slate-500">
@@ -242,6 +250,118 @@
 		</div>
 	</main>
 
+</div>
+
+<!-- Campaign Details Modal -->
+<div id="campaignDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+	<div class="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6">
+		<div class="flex justify-between items-center mb-4">
+			<h3 id="campaignDetailsTitle" class="text-lg font-semibold">Campaign Details</h3>
+			<button id="closeCampaignDetails" class="px-3 py-1 border rounded">Close</button>
+		</div>
+
+		<!-- Toggle Switch -->
+		<div class="mb-4 flex items-center justify-center">
+			<label class="inline-flex items-center cursor-pointer">
+				<span class="mr-3 text-sm font-medium text-slate-700">Recipients</span>
+				<div class="relative">
+					<input type="checkbox" id="panelToggle" class="sr-only">
+					<div class="w-14 h-7 bg-slate-300 rounded-full shadow-inner"></div>
+					<div class="dot absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-0.5 transition transform duration-300 ease-in-out"></div>
+				</div>
+				<span class="ml-3 text-sm font-medium text-slate-700">Logs</span>
+			</label>
+		</div>
+
+		<!-- Recipients Panel -->
+		<div id="recipientsPanel">
+			<div class="flex gap-3 items-center mb-4">
+				<input id="recipientSearch" type="text" placeholder="Search by email" class="border rounded p-2 w-64">
+				<select id="recipientStatusFilter" class="border rounded p-2">
+					<option value="">All</option>
+					<option value="sent">Sent</option>
+					<option value="failed">Failed</option>
+					<option value="pending">Pending</option>
+				</select>
+				<button id="applyRecipientFilters" class="px-3 py-1 bg-indigo-600 text-white rounded">Filter</button>
+				<button id="exportRecipientsCSV" class="px-3 py-1 bg-green-600 text-white rounded">Export CSV</button>
+			</div>
+
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead class="bg-slate-50 text-slate-500">
+						<tr>
+							<th class="p-3 text-left">Email</th>
+							<th class="p-3 text-left">Status</th>
+							<th class="p-3 text-left">Sent At</th>
+							<th class="p-3 text-left">Failure Reason</th>
+						</tr>
+					</thead>
+					<tbody id="recipientsTableBody"></tbody>
+				</table>
+			</div>
+
+			<div id="recipientsPagination" class="mt-4 flex justify-between items-center"></div>
+		</div>
+
+		<!-- Logs Panel -->
+		<div id="logsPanel" class="hidden">
+			<div class="flex items-center gap-3 mb-4">
+				<input id="logsSearch" type="text" placeholder="Search logs or recipient email" class="border rounded p-2 w-64">
+				<select id="logsStatusFilter" class="border rounded p-2">
+					<option value="">All</option>
+					<option value="sent">Sent</option>
+					<option value="failed">Failed</option>
+				</select>
+				<button id="applyLogsFilters" class="px-3 py-1 bg-indigo-600 text-white rounded">Filter</button>
+				<button id="exportLogsCSV" class="px-3 py-1 bg-green-600 text-white rounded">Export CSV</button>
+				<button id="bulkDeleteLogsBtn" class="px-3 py-1 bg-red-600 text-white rounded" disabled>Bulk Delete</button>
+			</div>
+
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-500">
+        <tr>
+          <th class="p-3 text-left"><input type="checkbox" id="logsSelectAll"></th>
+          <th class="p-3 text-left">Log ID</th>
+          <th class="p-3 text-left">Email</th>
+          <th class="p-3 text-left">Status</th>
+          <th class="p-3 text-left">Failure Reason</th>
+          <th class="p-3 text-left">Timestamp</th>
+          <th class="p-3 text-right">Actions</th>
+        </tr>
+      </thead>
+					<tbody id="logsTableBody"></tbody>
+				</table>
+			</div>
+
+			<div id="logsPagination" class="mt-4 flex justify-between items-center"></div>
+		</div>
+	</div>
+</div>
+
+<!-- Edit Log Modal -->
+<div id="editLogModal" class="hidden fixed inset-0 bg-black/40 items-center justify-center z-50">
+	<div class="bg-white w-full max-w-lg rounded-xl p-6 shadow-lg">
+		<h3 class="text-xl font-bold mb-4">Edit Log Entry</h3>
+		<div class="mb-3">
+			<label class="text-sm text-slate-600">Level</label>
+			<select id="editLogLevel" class="w-full p-2 border rounded-md">
+				<option value="info">Info</option>
+				<option value="warning">Warning</option>
+				<option value="error">Error</option>
+				<option value="success">Success</option>
+			</select>
+		</div>
+		<div class="mb-3">
+			<label class="text-sm text-slate-600">Message / Notes</label>
+			<textarea id="editLogMessage" class="w-full p-2 border rounded-md" rows="4"></textarea>
+		</div>
+		<div class="flex justify-end gap-3">
+			<button id="cancelEditLog" class="px-4 py-2 border rounded">Cancel</button>
+			<button id="saveEditLog" class="px-4 py-2 bg-indigo-600 text-white rounded">Save</button>
+		</div>
+	</div>
 </div>
 
 <!-- Sample CSV Modal -->
@@ -499,7 +619,7 @@ function loadCampaigns() {
 				const row = document.createElement('tr');
 				row.className = 'border-t hover:bg-slate-50';
 				row.innerHTML = `
-					<td class="p-3 text-slate-700 font-medium">${campaign.subject}</td>
+						<td class="p-3 text-slate-700 font-medium"><button class="viewCampaignBtn text-blue-600 underline" data-id="${campaign.campaign_id}">${campaign.subject}</button></td>
 					<td class="p-3 text-slate-700">${campaign.total_recipients}</td>
 					<td class="p-3 text-center text-green-600 font-semibold">${campaign.sent_count}</td>
 					<td class="p-3 text-center text-red-600 font-semibold">${campaign.failed_count}</td>
@@ -519,10 +639,131 @@ function loadCampaigns() {
 		});
 }
 
+let activeCampaignId = null;
+let recipientsPage = 1;
+
 function viewCampaignDetails(campaignId) {
-	// Could navigate to campaign details page
-	console.log('View campaign:', campaignId);
+	activeCampaignId = campaignId;
+	document.getElementById('campaignDetailsTitle').textContent = 'Campaign Details — ' + campaignId;
+	document.getElementById('campaignDetailsModal').classList.remove('hidden');
+	document.getElementById('campaignDetailsModal').classList.add('flex');
+	recipientsPage = 1;
+	// Reset toggle to Recipients
+	const panelToggle = document.getElementById('panelToggle');
+	const toggleBg = panelToggle.nextElementSibling;
+	const dot = toggleBg.nextElementSibling;
+	panelToggle.checked = false;
+	toggleBg.classList.remove('bg-indigo-600');
+	toggleBg.classList.add('bg-slate-300');
+	dot.classList.remove('translate-x-7');
+	fetchRecipients();
 }
+
+async function fetchRecipients(page = 1) {
+	const search = document.getElementById('recipientSearch').value.trim();
+	const status = document.getElementById('recipientStatusFilter').value;
+	const params = new URLSearchParams();
+	params.set('page', page);
+	params.set('page_size', 20);
+	if (search) params.set('search', search);
+	if (status) params.set('status', status);
+
+	const url = `/api/campaigns/${activeCampaignId}/recipients/?` + params.toString();
+	const res = await fetch(url);
+	if (!res.ok) {
+		document.getElementById('recipientsTableBody').innerHTML = '<tr><td colspan="4" class="p-6 text-center text-red-600">Failed to load recipients</td></tr>';
+		return;
+	}
+	const data = await res.json();
+	const items = data.results || data;
+	renderRecipients(items);
+
+	// Pagination
+	recipientsPage = page;
+	const total = data.count ? Math.ceil(data.count / 20) : 1;
+	renderRecipientsPagination(total);
+}
+
+function renderRecipients(items) {
+	const tbody = document.getElementById('recipientsTableBody');
+	tbody.innerHTML = '';
+	if (!items || items.length === 0) {
+		tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">No recipients found</td></tr>';
+		return;
+	}
+
+	items.forEach(r => {
+		const row = document.createElement('tr');
+		row.className = 'border-t hover:bg-slate-50';
+		const failure = r.error_message ? r.error_message : '';
+		const statusBadge = r.status === 'sent' ? '<span class="px-2 py-1 rounded text-xs bg-green-100 text-green-800">SENT</span>' : r.status === 'failed' ? '<span class="px-2 py-1 rounded text-xs bg-red-100 text-red-800">FAILED</span>' : '<span class="px-2 py-1 rounded text-xs bg-amber-100 text-amber-800">PENDING</span>';
+		row.innerHTML = `
+			<td class="p-3 text-slate-700">${r.email}</td>
+			<td class="p-3">${statusBadge}</td>
+			<td class="p-3 text-slate-600">${r.sent_at ? new Date(r.sent_at).toLocaleString() : '—'}</td>
+			<td class="p-3 text-slate-700">${failure}</td>
+		`;
+		tbody.appendChild(row);
+	});
+}
+
+function renderRecipientsPagination(totalPages) {
+	const el = document.getElementById('recipientsPagination');
+	el.innerHTML = '';
+	const prev = document.createElement('button');
+	prev.textContent = 'Previous';
+	prev.className = 'px-3 py-1 border rounded mr-2';
+	prev.disabled = recipientsPage <= 1;
+	prev.addEventListener('click', () => fetchRecipients(recipientsPage - 1));
+
+	const next = document.createElement('button');
+	next.textContent = 'Next';
+	next.className = 'px-3 py-1 border rounded';
+	next.disabled = recipientsPage >= totalPages;
+	next.addEventListener('click', () => fetchRecipients(recipientsPage + 1));
+
+	const info = document.createElement('div');
+	info.className = 'text-sm text-slate-500';
+	info.textContent = `Page ${recipientsPage} of ${totalPages}`;
+
+	el.appendChild(prev);
+	el.appendChild(info);
+	el.appendChild(next);
+}
+
+// Close details
+document.getElementById('closeCampaignDetails').addEventListener('click', () => {
+	document.getElementById('campaignDetailsModal').classList.add('hidden');
+});
+
+// Hook filter inside modal
+document.getElementById('applyRecipientFilters').addEventListener('click', () => fetchRecipients(1));
+
+// Toggle switch functionality
+const panelToggle = document.getElementById('panelToggle');
+const toggleBg = panelToggle.nextElementSibling;
+const dot = toggleBg.nextElementSibling;
+
+panelToggle.addEventListener('change', () => {
+  if (panelToggle.checked) {
+    // Show Logs
+    recipientsPanel.classList.add('hidden');
+    logsPanel.classList.remove('hidden');
+    toggleBg.classList.remove('bg-slate-300');
+    toggleBg.classList.add('bg-indigo-600');
+    dot.classList.add('translate-x-7');
+    fetchLogs(1);
+  } else {
+    // Show Recipients
+    logsPanel.classList.add('hidden');
+    recipientsPanel.classList.remove('hidden');
+    toggleBg.classList.remove('bg-indigo-600');
+    toggleBg.classList.add('bg-slate-300');
+    dot.classList.remove('translate-x-7');
+  }
+});
+
+
 
 // Alert helper
 function showAlert(message, type = 'info') {
@@ -544,6 +785,291 @@ function showAlert(message, type = 'info') {
 
 // Initial load
 window.addEventListener('DOMContentLoaded', loadCampaigns);
+
+// Delegate clicks for campaign detail buttons (works even after refresh)
+const campaignsListContainer = document.getElementById('campaignsList');
+if (campaignsListContainer) {
+  campaignsListContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.viewCampaignBtn');
+    if (btn && btn.dataset && btn.dataset.id) viewCampaignDetails(btn.dataset.id);
+  });
+}
+
+// Tab switching logic
+const tabBtnCreate = document.getElementById('tabBtnCreate');
+const tabBtnRecent = document.getElementById('tabBtnRecent');
+const createCard = document.getElementById('createCard');
+const recentCard = document.getElementById('recentCard');
+
+function switchToCreate() {
+  tabBtnCreate.classList.add('bg-indigo-600', 'text-white');
+  tabBtnCreate.classList.remove('bg-white');
+  tabBtnRecent.classList.remove('bg-indigo-600', 'text-white');
+  recentCard.classList.add('hidden');
+  createCard.classList.remove('hidden');
+}
+
+function switchToRecent() {
+  tabBtnRecent.classList.add('bg-indigo-600', 'text-white');
+  tabBtnRecent.classList.remove('bg-white');
+  tabBtnCreate.classList.remove('bg-indigo-600', 'text-white');
+  createCard.classList.add('hidden');
+  recentCard.classList.remove('hidden');
+  loadCampaigns();
+}
+
+if (tabBtnCreate) tabBtnCreate.addEventListener('click', switchToCreate);
+if (tabBtnRecent) tabBtnRecent.addEventListener('click', switchToRecent);
+
+// -------------------- Campaign Logs: fetching / edit / delete / bulk delete --------------------
+let logsPage = 1;
+let logsTotalPages = 1;
+let selectedLogIds = new Set();
+let currentEditLogId = null;
+
+function getCSRF() {
+  return document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+}
+
+async function fetchLogs(page = 1) {
+  if (!activeCampaignId) return;
+  const search = document.getElementById('logsSearch').value.trim();
+  const status = document.getElementById('logsStatusFilter').value;
+  const params = new URLSearchParams();
+  params.set('page', page);
+  params.set('page_size', 20);
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+
+  const url = `/api/campaigns/${activeCampaignId}/logs/?` + params.toString();
+  const res = await fetch(url);
+  if (!res.ok) {
+    document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="7" class="p-6 text-center text-red-600">Failed to load logs</td></tr>';
+    return;
+  }
+
+  const data = await res.json();
+  const items = data.results || data;
+  renderLogs(items);
+
+  logsPage = page;
+  logsTotalPages = data.count ? Math.ceil(data.count / 20) : 1;
+  renderLogsPagination();
+}
+
+function renderLogs(items) {
+  const tbody = document.getElementById('logsTableBody');
+  tbody.innerHTML = '';
+  if (!items || items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-500">No logs found</td></tr>';
+    return;
+  }
+
+  items.forEach(item => {
+    const row = document.createElement('tr');
+    row.className = 'border-t hover:bg-slate-50';
+
+    const rinfo = item.recipient_info || (item.recipient || null);
+    const recipientEmail = rinfo ? (rinfo.email || '') : '';
+    const status = rinfo ? (rinfo.status || '') : '';
+    const failureReason = rinfo ? (rinfo.error_message || '') : (item.message || '');
+
+    row.innerHTML = `
+      <td class="p-3"><input type="checkbox" data-id="${item.id}" class="logCheckbox" ${selectedLogIds.has(item.id) ? 'checked' : ''}></td>
+      <td class="p-3 font-mono text-xs">${item.id}</td>
+      <td class="p-3">${recipientEmail}</td>
+      <td class="p-3">${status ? `<span class="px-2 py-1 rounded text-xs ${status === 'sent' ? 'bg-green-100 text-green-800' : status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}">${status.toUpperCase()}</span>` : '—'}</td>
+      <td class="p-3">${failureReason}</td>
+      <td class="p-3">${new Date(item.created_at).toLocaleString()}</td>
+      <td class="p-3 text-right">
+        <button class="editLogBtn px-3 py-1 bg-slate-100 rounded mr-2" data-id="${item.id}">Edit</button>
+        <button class="deleteLogBtn px-3 py-1 bg-red-100 text-red-800 rounded" data-id="${item.id}">Delete</button>
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
+
+  // Attach handlers
+  document.querySelectorAll('.logCheckbox').forEach(cb => cb.addEventListener('change', onLogCheck));
+  document.querySelectorAll('.editLogBtn').forEach(b => b.addEventListener('click', onEditLogClick));
+  document.querySelectorAll('.deleteLogBtn').forEach(b => b.addEventListener('click', onDeleteLogClick));
+}
+
+function renderLogsPagination() {
+  const el = document.getElementById('logsPagination');
+  el.innerHTML = '';
+
+  const prev = document.createElement('button');
+  prev.textContent = 'Previous';
+  prev.className = 'px-3 py-1 border rounded mr-2';
+  prev.disabled = logsPage <= 1;
+  prev.addEventListener('click', () => fetchLogs(logsPage - 1));
+
+  const next = document.createElement('button');
+  next.textContent = 'Next';
+  next.className = 'px-3 py-1 border rounded';
+  next.disabled = logsPage >= logsTotalPages;
+  next.addEventListener('click', () => fetchLogs(logsPage + 1));
+
+  const info = document.createElement('div');
+  info.className = 'text-sm text-slate-500';
+  info.textContent = `Page ${logsPage} of ${logsTotalPages}`;
+
+  el.appendChild(prev);
+  el.appendChild(info);
+  el.appendChild(next);
+}
+
+function onLogCheck(e) {
+  const id = Number(e.target.dataset.id);
+  if (e.target.checked) selectedLogIds.add(id); else selectedLogIds.delete(id);
+  document.getElementById('bulkDeleteLogsBtn').disabled = selectedLogIds.size === 0;
+}
+
+function onEditLogClick(e) {
+  const id = e.target.dataset.id;
+  currentEditLogId = id;
+  // Load log details
+  fetch(`/api/campaigns/${activeCampaignId}/logs/?search=&page=1&page_size=1`)
+    .then(r => r.json())
+    .then(data => {
+      // Try to find item in page results (best-effort)
+      const items = data.results || data;
+      const found = (items || []).find(i => String(i.id) === String(id));
+      if (found) {
+        const rinfo = found.recipient_info || (found.recipient || null);
+        document.getElementById('editLogLevel').value = found.level || 'info';
+        document.getElementById('editLogMessage').value = found.message || '';
+        document.getElementById('editLogModal').classList.remove('hidden');
+      } else {
+        // fallback: fetch single log via campaign logs list until found
+        document.getElementById('editLogLevel').value = '';
+        document.getElementById('editLogMessage').value = '';
+        document.getElementById('editLogModal').classList.remove('hidden');
+      }
+    });
+}
+
+async function onDeleteLogClick(e) {
+  const id = e.target.dataset.id;
+  if (!confirm('Delete this log entry?')) return;
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': getCSRF()} });
+  if (res.ok) fetchLogs(logsPage);
+  else alert('Failed to delete');
+}
+
+// Bulk delete
+document.getElementById('bulkDeleteLogsBtn').addEventListener('click', async () => {
+  if (selectedLogIds.size === 0) return;
+  if (!confirm(`Delete ${selectedLogIds.size} log(s)?`)) return;
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/bulk_delete/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
+    body: JSON.stringify({ ids: Array.from(selectedLogIds) })
+  });
+  if (res.ok) {
+    selectedLogIds.clear();
+    document.getElementById('logsSelectAll').checked = false;
+    document.getElementById('bulkDeleteLogsBtn').disabled = true;
+    fetchLogs(logsPage);
+  } else {
+    alert('Bulk delete failed');
+  }
+});
+
+// Select all
+const logsSelectAllEl = document.getElementById('logsSelectAll');
+if (logsSelectAllEl) {
+  logsSelectAllEl.addEventListener('change', (e) => {
+    document.querySelectorAll('.logCheckbox').forEach(cb => {
+      cb.checked = e.target.checked;
+      const id = Number(cb.dataset.id);
+      if (e.target.checked) selectedLogIds.add(id); else selectedLogIds.delete(id);
+    });
+    document.getElementById('bulkDeleteLogsBtn').disabled = selectedLogIds.size === 0;
+  });
+}
+
+// Edit modal handlers
+document.getElementById('cancelEditLog').addEventListener('click', () => {
+  document.getElementById('editLogModal').classList.add('hidden');
+  currentEditLogId = null;
+});
+
+document.getElementById('saveEditLog').addEventListener('click', async () => {
+  const payload = { level: document.getElementById('editLogLevel').value, message: document.getElementById('editLogMessage').value };
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${currentEditLogId}/`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) {
+    document.getElementById('editLogModal').classList.add('hidden');
+    fetchLogs(logsPage);
+  } else {
+    alert('Failed to save changes');
+  }
+});
+
+// Logs filter handlers
+document.getElementById('applyLogsFilters').addEventListener('click', () => fetchLogs(1));
+
+// Tab switching inside modal
+const tabRecipientsBtn = document.getElementById('tabRecipients');
+const tabLogsBtn = document.getElementById('tabLogs');
+const recipientsPanel = document.getElementById('recipientsPanel');
+const logsPanel = document.getElementById('logsPanel');
+
+if (tabRecipientsBtn) tabRecipientsBtn.addEventListener('click', () => { recipientsPanel.classList.remove('hidden'); logsPanel.classList.add('hidden'); });
+if (tabLogsBtn) tabLogsBtn.addEventListener('click', () => { recipientsPanel.classList.add('hidden'); logsPanel.classList.remove('hidden'); fetchLogs(1); });
+
+// Export download helpers
+async function downloadFile(url, suggestedName) {
+  try {
+    const res = await fetch(url, { headers: { 'X-CSRFToken': getCSRF() } });
+    if (!res.ok) throw new Error('Export failed');
+    const blob = await res.blob();
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = suggestedName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
+  } catch (err) {
+    alert(err.message || 'Download failed');
+  }
+}
+
+function downloadRecipientsCSV() {
+  if (!activeCampaignId) return;
+  const search = document.getElementById('recipientSearch').value.trim();
+  const status = document.getElementById('recipientStatusFilter').value;
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  const url = `/api/campaigns/${activeCampaignId}/recipients/export/?` + params.toString();
+  downloadFile(url, `campaign_${activeCampaignId}_recipients.csv`);
+}
+
+function downloadLogsCSV() {
+  if (!activeCampaignId) return;
+  const search = document.getElementById('logsSearch').value.trim();
+  const status = document.getElementById('logsStatusFilter').value;
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  const url = `/api/campaigns/${activeCampaignId}/logs/export/?` + params.toString();
+  downloadFile(url, `campaign_${activeCampaignId}_logs.csv`);
+}
+
+// Attach export button listeners
+const exportRecipientsBtn = document.getElementById('exportRecipientsCSV');
+if (exportRecipientsBtn) exportRecipientsBtn.addEventListener('click', () => downloadRecipientsCSV());
+const exportLogsBtn = document.getElementById('exportLogsCSV');
+if (exportLogsBtn) exportLogsBtn.addEventListener('click', () => downloadLogsCSV());
 </script>
 
 </body>

@@ -45,10 +45,23 @@ class CampaignRecipientSerializer(serializers.ModelSerializer):
 
 
 class CampaignLogSerializer(serializers.ModelSerializer):
+    recipient_info = serializers.SerializerMethodField(read_only=True)
+    campaign_subject = serializers.CharField(source='campaign.subject', read_only=True)
+
     class Meta:
         model = CampaignLog
-        fields = '__all__'
+        fields = '__all__'  # includes campaign, recipient, message, level, created_at
         read_only_fields = ['campaign', 'created_at']
+
+    def get_recipient_info(self, obj):
+        if not obj.recipient:
+            return None
+        return {
+            'id': obj.recipient.id,
+            'email': obj.recipient.email,
+            'status': obj.recipient.status,
+            'error_message': obj.recipient.error_message
+        }
 
 
 class EmailCampaignSerializer(serializers.ModelSerializer):
