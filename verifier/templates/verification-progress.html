@@ -105,26 +105,37 @@
             <span class="status success">Completed</span>
           </li>
 
-          <li class="pipeline-item" data-step="Domain Check">
+          <li class="pipeline-item" data-step="Disposable Detection">
             <div class="pipeline-icon pipeline-completed">
+              <span class="material-symbols-outlined">delete_sweep</span>
+            </div>
+            <div class="pipeline-info">
+              <strong>Disposable Detection</strong>
+              <p>Identify temporary emails</p>
+            </div>
+            <span class="status success">Completed</span>
+          </li>
+
+          <li class="pipeline-item" data-step="Domain Check">
+            <div class="pipeline-icon pipeline-running">
               <span class="material-symbols-outlined">check</span>
             </div>
             <div class="pipeline-info">
               <strong>Domain Check</strong>
               <p>DNS record availability</p>
             </div>
-            <span class="status success">Completed</span>
+            <span class="status running">Running</span>
           </li>
 
           <li class="pipeline-item" data-step="MX Record Lookup">
-            <div class="pipeline-icon pipeline-running">
+            <div class="pipeline-icon pipeline-pending">
               <span class="material-symbols-outlined">sync</span>
             </div>
             <div class="pipeline-info">
               <strong>MX Record Lookup</strong>
               <p>Verifying mail exchange servers</p>
             </div>
-            <span class="status running">Running</span>
+            <span class="status pending">Pending</span>
           </li>
 
           <li class="pipeline-item" data-step="SMTP Handshake">
@@ -134,17 +145,6 @@
             <div class="pipeline-info">
               <strong>SMTP Handshake</strong>
               <p>Server connection test</p>
-            </div>
-            <span class="status pending">Pending</span>
-          </li>
-
-          <li class="pipeline-item" data-step="Disposable Detection">
-            <div class="pipeline-icon pipeline-pending">
-              <span class="material-symbols-outlined">delete_sweep</span>
-            </div>
-            <div class="pipeline-info">
-              <strong>Disposable Detection</strong>
-              <p>Identify temporary emails</p>
             </div>
             <span class="status pending">Pending</span>
           </li>

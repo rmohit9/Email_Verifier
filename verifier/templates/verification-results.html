@@ -106,6 +106,7 @@
     <table>
       <thead>
         <tr>
+          <th class="w-12 text-slate-400">#</th>
           <th>Email Address</th>
           <th>Status</th>
           <th>Reason</th>
@@ -117,6 +118,18 @@
       </tbody>
     </table>
   </section>
+
+  <div class="flex justify-between items-center mt-4">
+    <span class="text-sm text-slate-500" id="pageInfo">Loading...</span>
+    <div class="flex gap-2">
+      <button id="prevBtn" class="px-4 py-2 bg-white border border-slate-300 rounded text-slate-600 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+        Previous
+      </button>
+      <button id="nextBtn" class="px-4 py-2 bg-white border border-slate-300 rounded text-slate-600 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+        Next
+      </button>
+    </div>
+  </div>
 
 </main>
 
