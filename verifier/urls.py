@@ -28,7 +28,7 @@ urlpatterns = [
     path('cookie/', views.cookie, name='cookie'),
     
     # --- DRF API Routes ---
-    # This includes /api/jobs/, /api/jobs/{id}/results/, /api/jobs/{id}/download/
+    # This includes /api/jobs/ and /api/jobs/{id}/results/ (per-job CSV export was removed)
     # Also includes /api/campaigns/, /api/campaigns/{id}/send/, /api/campaigns/{id}/recipients/, etc.
     path('api/', include(router.urls)),
     

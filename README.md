@@ -135,10 +135,11 @@ GET /api/jobs/{job_id}/status/
 GET /api/jobs/{job_id}/results/?page=1&page_size=50
 ```
 
-### Download CSV
+### Download Jobs CSV (visible/filtered)
 ```bash
-GET /api/jobs/{job_id}/download/
+GET /api/jobs/download/?job_id=<filter>&level=<status>
 ```
+> Note: per-job CSV export has been removed. Use the logs page Export Displayed CSV button to export the currently visible/filtered jobs.
 
 ### Verify Single Email
 ```bash

@@ -60,9 +60,10 @@
 
 					<!-- Section 1: Upload CSV -->
 					<section>
-						<h2 class="text-xl font-semibold text-slate-800 mb-4">Upload Email List (CSV)</h2>
-						<p class="text-slate-600 text-sm mb-4">Upload your email list in CSV format. The file must have an 'email' column.</p>
-
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="text-xl font-semibold text-slate-800">Upload Email List (CSV)</h2>
+					<button type="button" id="toggleAdvanced" class="px-3 py-1 bg-blue-600 text-white rounded-md">Show advanced settings</button>
+				</div>
 						<div class="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer" id="csvDropZone">
 							<svg class="w-12 h-12 mx-auto text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -142,11 +143,8 @@
 				
 					<!-- Advanced Settings -->
 					<section class="mt-4">
-						<button type="button" id="toggleAdvanced" class="text-sm text-blue-600 hover:underline mb-3">Show advanced settings</button>
-						<div id="advancedSettings" class="hidden p-4 bg-slate-50 border border-slate-200 rounded">
-							<h3 class="font-semibold text-slate-800 mb-3">Advanced Delivery Settings (optional)</h3>
-							<div class="grid grid-cols-1 gap-3">
-								<label class="text-sm text-slate-600">Sender Name (optional)</label>
+				<div id="advancedSettings" class="hidden p-4 bg-slate-50 border border-slate-200 rounded">
+					<h3 class="font-semibold text-slate-800 mb-3">Advanced Delivery Settings (optional)</h3>
 								<input name="sender_name" type="text" class="w-full border rounded-md p-2" placeholder="e.g., Your Company">
 								<label class="text-sm text-slate-600">Sender Email (optional)</label>
 								<input name="sender_email" type="email" class="w-full border rounded-md p-2" placeholder="noreply@yourdomain.com">
@@ -254,7 +252,7 @@
 
 <!-- Campaign Details Modal -->
 <div id="campaignDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-	<div class="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6">
+	<div class="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6">
 		<div class="flex justify-between items-center mb-4">
 			<h3 id="campaignDetailsTitle" class="text-lg font-semibold">Campaign Details</h3>
 			<button id="closeCampaignDetails" class="px-3 py-1 border rounded">Close</button>
@@ -288,9 +286,17 @@
 			</div>
 
 			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
-					<thead class="bg-slate-50 text-slate-500">
-						<tr>
+					<table class="w-full text-sm table-fixed">
+						<colgroup>
+							<col style="width:56px">
+							<col>
+							<col style="width:120px">
+							<col style="width:180px">
+							<col>
+						</colgroup>
+						<thead class="bg-slate-50 text-slate-500">
+							<tr>
+								<th class="p-3 text-left">#</th>
 							<th class="p-3 text-left">Email</th>
 							<th class="p-3 text-left">Status</th>
 							<th class="p-3 text-left">Sent At</th>
@@ -319,11 +325,22 @@
 			</div>
 
 			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+					<table class="w-full text-sm table-fixed">
+      <colgroup>
+        <col style="width:40px">
+        <col style="width:56px">
+        <col style="width:80px">
+        <col style="width:220px">
+        <col style="width:120px">
+        <col>
+        <col style="width:180px">
+        <col style="width:120px">
+      </colgroup>
       <thead class="bg-slate-50 text-slate-500">
         <tr>
           <th class="p-3 text-left"><input type="checkbox" id="logsSelectAll"></th>
-          <th class="p-3 text-left">Log ID</th>
+          <th class="p-3 text-left">#</th>
+          <th class="p-3 text-left">Log Id</th>
           <th class="p-3 text-left">Email</th>
           <th class="p-3 text-left">Status</th>
           <th class="p-3 text-left">Failure Reason</th>
@@ -671,9 +688,9 @@ async function fetchRecipients(page = 1) {
 	const url = `/api/campaigns/${activeCampaignId}/recipients/?` + params.toString();
 	const res = await fetch(url);
 	if (!res.ok) {
-		document.getElementById('recipientsTableBody').innerHTML = '<tr><td colspan="4" class="p-6 text-center text-red-600">Failed to load recipients</td></tr>';
+		document.getElementById('recipientsTableBody').innerHTML = '<tr><td colspan="5" class="p-6 text-center text-red-600">Failed to load recipients</td></tr>';
 		return;
-	}
+	} 
 	const data = await res.json();
 	const items = data.results || data;
 	renderRecipients(items);
@@ -688,24 +705,30 @@ function renderRecipients(items) {
 	const tbody = document.getElementById('recipientsTableBody');
 	tbody.innerHTML = '';
 	if (!items || items.length === 0) {
-		tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">No recipients found</td></tr>';
+		tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">No recipients found</td></tr>';
 		return;
 	}
 
-	items.forEach(r => {
+	// Calculate serial start based on current page and page size
+	const pageSize = 20;
+	const serialStart = (recipientsPage - 1) * pageSize;
+
+	items.forEach((r, idx) => {
 		const row = document.createElement('tr');
 		row.className = 'border-t hover:bg-slate-50';
 		const failure = r.error_message ? r.error_message : '';
 		const statusBadge = r.status === 'sent' ? '<span class="px-2 py-1 rounded text-xs bg-green-100 text-green-800">SENT</span>' : r.status === 'failed' ? '<span class="px-2 py-1 rounded text-xs bg-red-100 text-red-800">FAILED</span>' : '<span class="px-2 py-1 rounded text-xs bg-amber-100 text-amber-800">PENDING</span>';
+		const serial = serialStart + idx + 1;
 		row.innerHTML = `
+			<td class="p-3 text-slate-700 font-mono text-xs">${serial}</td>
 			<td class="p-3 text-slate-700">${r.email}</td>
 			<td class="p-3">${statusBadge}</td>
 			<td class="p-3 text-slate-600">${r.sent_at ? new Date(r.sent_at).toLocaleString() : '—'}</td>
-			<td class="p-3 text-slate-700">${failure}</td>
+			<td class="p-3 text-slate-700 break-words">${failure}</td>
 		`;
 		tbody.appendChild(row);
 	});
-}
+} 
 
 function renderRecipientsPagination(totalPages) {
 	const el = document.getElementById('recipientsPagination');
@@ -844,9 +867,9 @@ async function fetchLogs(page = 1) {
   const url = `/api/campaigns/${activeCampaignId}/logs/?` + params.toString();
   const res = await fetch(url);
   if (!res.ok) {
-    document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="7" class="p-6 text-center text-red-600">Failed to load logs</td></tr>';
+    document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="8" class="p-6 text-center text-red-600">Failed to load logs</td></tr>';
     return;
-  }
+  } 
 
   const data = await res.json();
   const items = data.results || data;
@@ -865,7 +888,11 @@ function renderLogs(items) {
     return;
   }
 
-  items.forEach(item => {
+  // Calculate serial start based on current page and page size
+  const pageSize = 20;
+  const serialStart = (logsPage - 1) * pageSize;
+
+  items.forEach((item, idx) => {
     const row = document.createElement('tr');
     row.className = 'border-t hover:bg-slate-50';
 
@@ -873,13 +900,15 @@ function renderLogs(items) {
     const recipientEmail = rinfo ? (rinfo.email || '') : '';
     const status = rinfo ? (rinfo.status || '') : '';
     const failureReason = rinfo ? (rinfo.error_message || '') : (item.message || '');
+    const serial = serialStart + idx + 1;
 
     row.innerHTML = `
       <td class="p-3"><input type="checkbox" data-id="${item.id}" class="logCheckbox" ${selectedLogIds.has(item.id) ? 'checked' : ''}></td>
+      <td class="p-3 text-slate-700 font-mono text-xs">${serial}</td>
       <td class="p-3 font-mono text-xs">${item.id}</td>
-      <td class="p-3">${recipientEmail}</td>
+      <td class="p-3 break-words">${recipientEmail}</td>
       <td class="p-3">${status ? `<span class="px-2 py-1 rounded text-xs ${status === 'sent' ? 'bg-green-100 text-green-800' : status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}">${status.toUpperCase()}</span>` : '—'}</td>
-      <td class="p-3">${failureReason}</td>
+      <td class="p-3 break-words">${failureReason}</td>
       <td class="p-3">${new Date(item.created_at).toLocaleString()}</td>
       <td class="p-3 text-right">
         <button class="editLogBtn px-3 py-1 bg-slate-100 rounded mr-2" data-id="${item.id}">Edit</button>
@@ -954,7 +983,7 @@ function onEditLogClick(e) {
 async function onDeleteLogClick(e) {
   const id = e.target.dataset.id;
   if (!confirm('Delete this log entry?')) return;
-  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': getCSRF()} });
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${id}/delete/`, { method: 'DELETE', headers: {'X-CSRFToken': getCSRF()} });
   if (res.ok) fetchLogs(logsPage);
   else alert('Failed to delete');
 }
@@ -999,7 +1028,7 @@ document.getElementById('cancelEditLog').addEventListener('click', () => {
 
 document.getElementById('saveEditLog').addEventListener('click', async () => {
   const payload = { level: document.getElementById('editLogLevel').value, message: document.getElementById('editLogMessage').value };
-  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${currentEditLogId}/`, {
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${currentEditLogId}/edit/`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
     body: JSON.stringify(payload)
@@ -1027,7 +1056,7 @@ if (tabLogsBtn) tabLogsBtn.addEventListener('click', () => { recipientsPanel.cla
 // Export download helpers
 async function downloadFile(url, suggestedName) {
   try {
-    const res = await fetch(url, { headers: { 'X-CSRFToken': getCSRF() } });
+    const res = await fetch(url, { credentials: 'same-origin', headers: { 'X-CSRFToken': getCSRF(), 'Accept': 'text/csv' } });
     if (!res.ok) throw new Error('Export failed');
     const blob = await res.blob();
     const href = URL.createObjectURL(blob);
@@ -1061,7 +1090,7 @@ function downloadLogsCSV() {
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   if (status) params.set('status', status);
-  const url = `/api/campaigns/${activeCampaignId}/logs/export/?` + params.toString();
+  const url = `/api/campaigns/${activeCampaignId}/logs/download/?` + params.toString();
   downloadFile(url, `campaign_${activeCampaignId}_logs.csv`);
 }
 

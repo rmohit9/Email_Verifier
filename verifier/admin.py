@@ -18,9 +18,9 @@ class VerificationJobAdmin(admin.ModelAdmin):
 @admin.register(EmailResult)
 class EmailResultAdmin(admin.ModelAdmin):
     list_display = ['email', 'status', 'domain', 'syntax_valid', 'domain_exists', 
-                    'mx_records_found', 'smtp_valid', 'is_disposable', 'verified_at']
+                    'mx_records_found', 'is_disposable', 'verified_at']
     list_filter = ['status', 'syntax_valid', 'domain_exists', 'mx_records_found', 
-                   'smtp_valid', 'is_disposable', 'is_catch_all']
+                   'is_disposable']
     search_fields = ['email', 'domain', 'normalized_email']
     readonly_fields = ['verified_at']
     ordering = ['-verified_at']

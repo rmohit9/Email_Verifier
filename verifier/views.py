@@ -8,7 +8,19 @@ from django.db.models import F
 import logging
 
 # --- DRF Imports ---
-from rest_framework import viewsets, status, views, permissions, parsers
+from rest_framework import viewsets, status, views, permissions, parsers, renderers
+
+
+class CSVRenderer(renderers.BaseRenderer):
+    """Simple CSV renderer for downloads"""
+    media_type = 'text/csv'
+    format = 'csv'
+    charset = 'utf-8'
+
+    def render(self, data, media_type=None, renderer_context=None):
+        # If a Django HttpResponse is returned from the view, DRF will bypass renderers.
+        # This renderer exists to satisfy content negotiation when Accept: text/csv is used.
+        return data
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.throttling import ScopedRateThrottle
@@ -594,21 +606,45 @@ class VerificationJobViewSet(viewsets.ModelViewSet):
         serializer = EmailResultSerializer(results, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
-    def download(self, request, pk=None):
-        """ Download CSV from DB """
-        job = self.get_object()
-        results = EmailResult.objects.filter(job=job)
+    # Per-job results snapshot endpoints and per-job CSV export were removed.
+    # Use the collection-level export endpoint at /api/jobs/download/ to export visible/filtered jobs.
 
+    @action(detail=False, methods=['get'], url_path='download', renderer_classes=[renderers.JSONRenderer, CSVRenderer])
+    def export_jobs(self, request):
+        """Export verification jobs (filtered) as CSV"""
+        qs = self.get_queryset().order_by('-created_at')
+
+        job_id = request.GET.get('job_id', '').strip()
+        level = request.GET.get('level', '').strip()
+
+        if job_id:
+            # support partial job id or UUID
+            qs = qs.filter(job_id__icontains=job_id)
+
+        if level:
+            qs = qs.filter(status=level)
+
+        filename = 'verification_jobs_export.csv'
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="results_{job.job_id}.csv"'
-        
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
         writer = csv.writer(response)
-        writer.writerow(['Email', 'Status', 'Reason', 'Syntax', 'Domain', 'MX'])
-        
-        for r in results:
-            writer.writerow([r.email, r.status, r.reason, r.syntax_valid, r.domain_exists, r.mx_records_found])
-            
+        writer.writerow(['No', 'Job ID', 'Filename', 'Status', 'Created At', 'Total', 'Valid', 'Invalid', 'Disposable', 'Progress'])
+
+        for i, job in enumerate(qs, start=1):
+            writer.writerow([
+                i,
+                job.job_id,
+                job.filename or '',
+                job.status,
+                job.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                job.total_count,
+                job.valid_count,
+                job.invalid_count,
+                job.disposable_count,
+                f"{job.progress_percentage:.0f}%"
+            ])
+
         return response
 
 # ============================================================================
@@ -1104,7 +1140,7 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         serializer = CampaignLogSerializer(logs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['patch'], url_path=r'logs/(?P<log_id>[^/.]+)')
+    @action(detail=True, methods=['patch'], url_path=r'logs/(?P<log_id>[^/.]+)/edit')
     def edit_log(self, request, pk=None, log_id=None):
         """Edit a specific campaign log (level/message)"""
         campaign = self.get_object()
@@ -1129,7 +1165,7 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
             log.save(update_fields=list(allowed.keys()))
         return Response(CampaignLogSerializer(log).data)
 
-    @action(detail=True, methods=['delete'], url_path=r'logs/(?P<log_id>[^/.]+)')
+    @action(detail=True, methods=['delete'], url_path=r'logs/(?P<log_id>[^/.]+)/delete')
     def delete_log(self, request, pk=None, log_id=None):
         """Delete a specific campaign log"""
         campaign = self.get_object()
@@ -1165,12 +1201,12 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
         writer = csv.writer(response)
-        writer.writerow(['Email', 'Status', 'Error Message', 'Sent At', 'Brevo Message ID'])
-        for r in recipients:
-            writer.writerow([r.email, r.status, r.error_message or '', r.sent_at.isoformat() if r.sent_at else '', r.brevo_message_id or ''])
+        writer.writerow(['No', 'Email', 'Status', 'Error Message', 'Sent At', 'Brevo Message ID'])
+        for i, r in enumerate(recipients, start=1):
+            writer.writerow([i, r.email, r.status, r.error_message or '', r.sent_at.isoformat() if r.sent_at else '', r.brevo_message_id or ''])
         return response
 
-    @action(detail=True, methods=['get'], url_path='logs/export')
+    @action(detail=True, methods=['get'], url_path='logs/download', renderer_classes=[CSVRenderer])
     def export_logs(self, request, pk=None):
         """Export campaign logs as CSV"""
         campaign = self.get_object()
@@ -1183,10 +1219,10 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
         writer = csv.writer(response)
-        writer.writerow(['Log ID', 'Level', 'Message', 'Recipient Email', 'Recipient Status', 'Recipient Error', 'Created At'])
-        for l in logs:
+        writer.writerow(['No', 'Log ID', 'Level', 'Message', 'Recipient Email', 'Recipient Status', 'Recipient Error', 'Created At'])
+        for i, l in enumerate(logs, start=1):
             rec = l.recipient
-            writer.writerow([l.id, l.level, l.message, rec.email if rec else '', rec.status if rec else '', rec.error_message if rec else '', l.created_at.isoformat() if l.created_at else ''])
+            writer.writerow([i, l.id, l.level, l.message, rec.email if rec else '', rec.status if rec else '', rec.error_message if rec else '', l.created_at.isoformat() if l.created_at else ''])
         return response
 
     @action(detail=True, methods=['post'])

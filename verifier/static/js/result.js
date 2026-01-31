@@ -1,8 +1,15 @@
 (() => {
   /* -------------------------------
-     SAFETY CHECK
+     SAFETY CHECK (use query param or localStorage)
   -------------------------------- */
-  const jobId = localStorage.getItem("jobId");
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobIdParam = urlParams.get('job_id');
+  let jobId = jobIdParam || localStorage.getItem("jobId");
+
+  // If jobId provided via URL, persist in localStorage for convenience
+  if (jobIdParam) {
+    try { localStorage.setItem('jobId', jobIdParam); } catch (e) { /* ignore */ }
+  }
 
   if (!jobId) {
     alert("No verification job found. Redirecting to upload page.");
@@ -173,7 +180,7 @@
 
   if(exportBtn) {
       exportBtn.addEventListener("click", () => {
-        window.location.href = `/api/jobs/${jobId}/download/`;
+        alert('Per-job export has been disabled. Use Logs page "Export Displayed CSV" to export jobs listings.');
       });
   }
 

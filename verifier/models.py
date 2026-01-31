@@ -68,19 +68,16 @@ class EmailResult(models.Model):
     syntax_valid = models.BooleanField(default=False)
     domain_exists = models.BooleanField(default=False)
     mx_records_found = models.BooleanField(default=False)
-    smtp_valid = models.BooleanField(default=False)
     is_disposable = models.BooleanField(default=False)
-    is_catch_all = models.BooleanField(default=False)
-    
+
     # Additional Info
     reason = models.TextField(blank=True, null=True)
     mx_records = models.JSONField(default=list, blank=True)
     domain = models.CharField(max_length=255, blank=True, null=True)
     normalized_email = models.EmailField(max_length=255, blank=True, null=True)
-    
+
     # Metadata
     verified_at = models.DateTimeField(auto_now_add=True)
-    verification_time_ms = models.IntegerField(default=0)  # Time taken in milliseconds
     
     class Meta:
         ordering = ['id']
@@ -218,20 +215,19 @@ class CampaignLog(models.Model):
         ('error', 'Error'),
         ('success', 'Success'),
     ]
-    
+
     id = models.AutoField(primary_key=True)
     campaign = models.ForeignKey(EmailCampaign, on_delete=models.CASCADE, related_name='logs')
     level = models.CharField(max_length=20, choices=LOG_LEVEL_CHOICES, default='info')
     message = models.TextField()
     recipient = models.ForeignKey(CampaignRecipient, on_delete=models.SET_NULL, null=True, blank=True, related_name='logs')
-    
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['campaign', 'level']),
         ]
-    
+
     def __str__(self):
         return f"[{self.level.upper()}] {self.message[:50]}"
