@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    VerificationJob, EmailResult, DisposableEmailDomain,
+    VerificationJob, EmailResult,
     EmailCampaign, CampaignRecipient, CampaignLog
 )
 
@@ -33,15 +33,6 @@ class EmailResultAdmin(admin.ModelAdmin):
     search_fields = ['email', 'domain', 'normalized_email']
     readonly_fields = ['verified_at']
     ordering = ['-verified_at']
-
-
-@admin.register(DisposableEmailDomain)
-class DisposableEmailDomainAdmin(admin.ModelAdmin):
-    list_display = ['domain', 'is_active', 'added_at']
-    list_filter = ['is_active', 'added_at']
-    search_fields = ['domain']
-    ordering = ['domain']
-
 
 @admin.register(EmailCampaign)
 class EmailCampaignAdmin(admin.ModelAdmin):

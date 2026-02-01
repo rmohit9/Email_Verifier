@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('verifier', '0002_verificationjob_disposable_count_and_more'),
+        ('verifier', '0003_remove_emailresult_is_catch_all_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

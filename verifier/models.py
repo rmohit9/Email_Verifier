@@ -93,22 +93,6 @@ class EmailResult(models.Model):
     def __str__(self):
         return f"{self.email} - {self.status}"
 
-
-class DisposableEmailDomain(models.Model):
-    """
-    List of disposable/temporary email domains
-    """
-    domain = models.CharField(max_length=255, unique=True, db_index=True)
-    added_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
-    
-    class Meta:
-        ordering = ['domain']
-    
-    def __str__(self):
-        return self.domain
-
-
 class EmailCampaign(models.Model):
     """
     Tracks bulk email campaign uploads and sending
