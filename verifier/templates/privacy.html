@@ -1,271 +1,283 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-{% load static %}
-<meta charset="UTF-8">
-<title>Privacy Policy | Graphura</title>
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <title>Privacy Policy | Graphura</title>
 
+    <style>
+            /* ================================
+         GLOBAL RESET
+      ================================ */
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+              font-family:
+                "Segoe UI",
+                system-ui,
+                -apple-system,
+                sans-serif;
+            }
 
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-}
+            html,
+            body {
+              width: 100%;
+              overflow-x: hidden;
+            }
 
-html, body {
-  width: 100%;
-  overflow-x: hidden;
-}
+            body {
+              background: wheat;
+              color: #0f172a;
+              line-height: 1.75;
+            }
 
-body {
-  background: #f4f7fb;
-  color: #0f172a;
-  line-height: 1.75;
-}
+            /* ================================
+         HEADER (COMPACT VERSION)
+      ================================ */
+            .privacy-header {
+              background-color: #0f172a;
+              color: wheat;
+              /* Compact padding */
+              padding: 30px 16px 40px;
+              text-align: center;
+              position: relative;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+            }
 
-/* ================================
-   HEADER
-================================ */
-.privacy-header {
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,0.15), transparent 40%),
-    linear-gradient(135deg, #2563eb, #1e40af);
-  color: #ffffff;
-  padding: clamp(36px, 5vw, 56px) 16px;
-  text-align: center;
-  position: relative;
-}
+            /* --- Logo Container --- */
+            .logo-container {
+              width: 70px;
+              height: 70px;
+              background-color: wheat;
+              border-radius: 50%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin-bottom: 15px;
+              box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            }
 
-.privacy-title {
-  font-size: clamp(22px, 3vw, 30px);
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  margin-bottom: 10px;
-}
+            .header-logo {
+              width: 65%;
+              height: auto;
+            }
 
-.privacy-meta {
-  font-size: 13px;
-  line-height: 1.5;
-  max-width: 760px;
-  margin: auto;
-  opacity: 0.95;
-}
+            .privacy-title {
+              font-size: 24px;
+              font-weight: 600;
+              letter-spacing: 0.3px;
+              margin-bottom: 5px;
+            }
 
-.privacy-date {
-  margin-top: 8px;
-  font-size: 12px;
-  opacity: 0.85;
-}
+            .privacy-meta {
+              font-size: 13px;
+              line-height: 1.4;
+              max-width: 760px;
+              margin: auto;
+              opacity: 0.95;
+            }
 
+            .privacy-date {
+              margin-top: 6px;
+              font-size: 11px;
+              opacity: 0.7;
+            }
 
-/* ================================
-   CENTER WRAPPER
-================================ */
-.privacy-container {
-  display: flex;
-  justify-content: center;
-  padding: 30px 16px 70px;
-}
+            /* ================================
+         CENTER WRAPPER & CARD
+      ================================ */
+            .privacy-container {
+              display: flex;
+              justify-content: center;
+              /* RESTORED PADDING: No overlap, card sits below header */
+              padding: 30px 16px 70px;
+            }
 
-/* ================================
-   POLICY CARD
-================================ */
-.privacy-content {
-  background: #ffffff;
-  width: 100%;
-  max-width: 900px;
-  border-radius: 18px;
-  padding: clamp(24px, 4vw, 42px);
-  box-shadow:
-    0 25px 45px rgba(0,0,0,0.08),
-    0 8px 18px rgba(37,99,235,0.05);
-  position: relative;
-}
+            .privacy-content {
+              background: #ffffff;
+              width: 100%;
+              max-width: 900px;
+              border-radius: 18px;
+              padding: clamp(24px, 4vw, 42px);
+              box-shadow:
+                0 25px 45px rgba(0, 0, 0, 0.08),
+                0 8px 18px rgba(37, 99, 235, 0.05);
+              position: relative;
+            }
 
-/* Top accent line */
-.privacy-content::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  border-radius: 18px 18px 0 0;
-  background: linear-gradient(to right, #2563eb, #60a5fa);
-}
+            .privacy-content::before {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 4px;
+              border-radius: 18px 18px 0 0;
+              background-color: #0f172a;
+            }
 
-/* ================================
-   SECTION HEADINGS
-================================ */
-.privacy-content h2 {
-  font-size: clamp(17px, 2.3vw, 19px);
-  margin: 28px 0 10px;
-  padding-left: 12px;
-  border-left: 3px solid #2563eb;
-  color: #0f172a;
-}
+            /* ================================
+         TYPOGRAPHY & CONTENT
+      ================================ */
+            .privacy-content h2 {
+              font-size: 18px;
+              margin: 24px 0 8px;
+              padding-left: 12px;
+              {% comment %} border-left: 3px solid #2563eb; {% endcomment %}
+               border-left: 3px solid #3d507b;
+              color: #0f172a;
+            }
 
-/* ================================
-   TEXT
-================================ */
-.privacy-content p,
-.privacy-content li {
-  font-size: 14px;
-  color: #334155;
-}
+            .privacy-content p,
+            .privacy-content li {
+              font-size: 14px;
+              color: #334155;
+            }
 
-.privacy-content ul {
-  margin: 10px 0 10px 26px;
-}
+            .privacy-content ul {
+              margin: 8px 0 8px 26px;
+            }
 
-.privacy-content li::marker {
-  color: #2563eb;
-}
+            .privacy-content li::marker {
+              color: #2563eb;
+            }
 
-/* ================================
-   FOOT NOTE
-================================ */
-.policy-note {
-  margin-top: 42px;
-  padding-top: 18px;
-  border-top: 1px dashed #cbd5f5;
-  font-size: 13px;
-  color: #475569;
-  text-align: center;
-}
+            /* ================================
+         RESPONSIVE
+      ================================ */
+            @media (max-width: 480px) {
+              .privacy-meta {
+                font-size: 12px;
+              }
+              .privacy-content {
+                border-radius: 14px;
+              }
+              .logo-container {
+                width: 60px;
+                height: 60px;
+              }
+            }
 
-/* ================================
-   RESPONSIVE TWEAKS
-================================ */
-@media (max-width: 480px) {
-  .privacy-meta {
-    font-size: 12px;
-  }
+            @media (min-width: 1600px) {
+              body {
+                font-size: 15px;
+              }
+            }
+    </style>
+  </head>
+  <body>
+    <section class="privacy-header">
+      <div class="logo-container">
+        <img
+          src="{% static 'graphura-circular.png' %}"
+          alt="Graphura Logo"
+          class="header-logo"
+        />
+      </div>
 
-  .privacy-content {
-    border-radius: 14px;
-  }
+      <div class="container">
+        <h1 class="privacy-title">Privacy Policy</h1>
+        <p class="privacy-meta">
+          Website: https://graphura.in &bull; Graphura India Private Limited
+          &bull; Patudi, Gurugram, Haryana — 122503
+        </p>
+        <div class="privacy-date">Effective Date: November 25, 2025</div>
+      </div>
+    </section>
 
-  .privacy-content h2 {
-    margin-top: 24px;
-  }
-}
+    <section class="privacy-container">
+      <div class="privacy-content">
+        <h2>1. Introduction</h2>
+        <p>
+          Graphura India Private Limited (“Graphura”, “we”, “our”, “us”)
+          respects your privacy and is committed to protecting your personal
+          information. This Privacy Policy explains how we collect, use, store,
+          and protect your data.
+        </p>
 
-@media (min-width: 1600px) {
-  body {
-    font-size: 15px;
-  }
-}
-</style>
-<body>
+        <h2>2. Information We Collect</h2>
+        <p>We may collect the following types of information:</p>
+        <ul>
+          <li>Personal details (name, email address, phone number)</li>
+          <li>Account login credentials</li>
+          <li>Payment and billing information</li>
+          <li>Usage data, IP address, browser type</li>
+        </ul>
 
-<!-- ===== HEADER ===== -->
-<section class="privacy-header">
-  <div class="container">
-    <h1 class="privacy-title">Privacy Policy</h1>
-    <p class="privacy-meta">
-      Website: https://graphura.in<br>
-      Company Name: Graphura India Private Limited<br>
-      Registered Office: Patudi, Gurugram, Haryana — 122503
-    </p>
-    <div class="privacy-date">Effective Date: November 25, 2025</div>
-  </div>
-</section>
+        <h2>3. How We Use Your Information</h2>
+        <ul>
+          <li>To provide and improve our services</li>
+          <li>To verify user identity and prevent fraud</li>
+          <li>To communicate updates, support, or offers</li>
+          <li>To comply with legal obligations</li>
+        </ul>
 
-<!-- ===== CONTENT ===== -->
-<section class="privacy-container">
-  <div class="privacy-content">
+        <h2>4. Cookies & Tracking Technologies</h2>
+        <p>
+          We use cookies and similar technologies to improve user experience,
+          analyze traffic, and personalize content. You may disable cookies
+          through your browser settings.
+        </p>
 
-    <h2>1. Introduction</h2>
-    <p>
-      Graphura India Private Limited (“Graphura”, “we”, “our”, “us”) respects your
-      privacy and is committed to protecting your personal information.
-      This Privacy Policy explains how we collect, use, store, and protect your data.
-    </p>
+        <h2>5. Data Sharing & Disclosure</h2>
+        <p>
+          We do not sell or rent your personal data. Information may be shared
+          only:
+        </p>
+        <ul>
+          <li>With trusted service providers</li>
+          <li>To comply with legal requirements</li>
+          <li>To protect our rights and users</li>
+        </ul>
 
-    <h2>2. Information We Collect</h2>
-    <p>We may collect the following types of information:</p>
-    <ul>
-      <li>Personal details (name, email address, phone number)</li>
-      <li>Account login credentials</li>
-      <li>Payment and billing information</li>
-      <li>Usage data, IP address, browser type</li>
-    </ul>
+        <h2>6. Data Security</h2>
+        <p>
+          We implement industry-standard security measures to protect your data.
+          However, no online system is completely secure.
+        </p>
 
-    <h2>3. How We Use Your Information</h2>
-    <ul>
-      <li>To provide and improve our services</li>
-      <li>To verify user identity and prevent fraud</li>
-      <li>To communicate updates, support, or offers</li>
-      <li>To comply with legal obligations</li>
-    </ul>
+        <h2>7. Data Retention</h2>
+        <p>
+          Your information is retained only as long as necessary to fulfill
+          business and legal requirements.
+        </p>
 
-    <h2>4. Cookies & Tracking Technologies</h2>
-    <p>
-      We use cookies and similar technologies to improve user experience,
-      analyze traffic, and personalize content. You may disable cookies
-      through your browser settings.
-    </p>
+        <h2>8. User Rights</h2>
+        <ul>
+          <li>Access or update your personal data</li>
+          <li>Request deletion of your data</li>
+          <li>Withdraw consent where applicable</li>
+        </ul>
 
-    <h2>5. Data Sharing & Disclosure</h2>
-    <p>
-      We do not sell or rent your personal data. Information may be shared only:
-    </p>
-    <ul>
-      <li>With trusted service providers</li>
-      <li>To comply with legal requirements</li>
-      <li>To protect our rights and users</li>
-    </ul>
+        <h2>9. Third-Party Links</h2>
+        <p>
+          Our website may contain links to external websites. We are not
+          responsible for their privacy practices.
+        </p>
 
-    <h2>6. Data Security</h2>
-    <p>
-      We implement industry-standard security measures to protect your data.
-      However, no online system is completely secure.
-    </p>
+        <h2>10. Children’s Privacy</h2>
+        <p>
+          Our services are not intended for children under 13. We do not
+          knowingly collect data from minors.
+        </p>
 
-    <h2>7. Data Retention</h2>
-    <p>
-      Your information is retained only as long as necessary to fulfill
-      business and legal requirements.
-    </p>
+        <h2>11. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time. Continued use of
+          our services indicates acceptance of changes.
+        </p>
 
-    <h2>8. User Rights</h2>
-    <ul>
-      <li>Access or update your personal data</li>
-      <li>Request deletion of your data</li>
-      <li>Withdraw consent where applicable</li>
-    </ul>
-
-    <h2>9. Third-Party Links</h2>
-    <p>
-      Our website may contain links to external websites.
-      We are not responsible for their privacy practices.
-    </p>
-
-    <h2>10. Children’s Privacy</h2>
-    <p>
-      Our services are not intended for children under 13.
-      We do not knowingly collect data from minors.
-    </p>
-
-    <h2>11. Changes to This Policy</h2>
-    <p>
-      We may update this Privacy Policy from time to time.
-      Continued use of our services indicates acceptance of changes.
-    </p>
-
-    <h2>12. Contact Information</h2>
-    <p>
-      Graphura India Private Limited<br>
-      Patudi, Gurugram, Haryana — 122503<br>
-      Email: support@graphura.in<br>
-      Website: https://graphura.in
-    </p>
-
-  </div>
-</section>
-
-</body>
+        <h2>12. Contact Information</h2>
+        <p>
+          Graphura India Private Limited<br />
+          Patudi, Gurugram, Haryana — 122503<br />
+          Email: support@graphura.in<br />
+          Website: https://graphura.in
+        </p>
+      </div>
+    </section>
+  </body>
 </html>

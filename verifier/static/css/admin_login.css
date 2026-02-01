@@ -2,23 +2,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --primary-color: #6366f1; /* Indigo 500 */
-    --primary-hover: #4f46e5; /* Indigo 600 */
-    --bg-gradient-start: #0f172a; /* Slate 900 */
-    --bg-gradient-end: #1e293b; /* Slate 800 */
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text-main: #f8fafc; /* Slate 50 */
-    --text-muted: #94a3b8; /* Slate 400 */
+    /* --- SWAPPED COLOR PALETTE --- */
+    
+    /* Body is now Dark */
+    --body-bg: #0f172a;          
+    
+    /* Card is now Light (White) */
+    --card-bg: #ffffff;          
+    
+    /* Text is now Dark */
+    --text-heading: #1e293b;     
+    --text-label: #64748b;       
+    
+    /* Inputs are Light Grey */
+    --input-bg: #f8fafc;         
+    --input-border: #cbd5e1;     
+    --input-text: #0f172a;
+    --icon-color: #64748b;
+
+    /* Brand Colors (Kept vibrant) */
+    --btn-bg: yellowgreen;       
+    --btn-slide: wheat;          
+    --btn-text: black;           
 }
 
 body {
     font-family: 'Spline Sans', sans-serif;
-    background: radial-gradient(circle at top left, #1e1b4b, transparent 40%),
-                radial-gradient(circle at bottom right, #312e81, transparent 40%),
-                linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-    background-attachment: fixed;
-    color: var(--text-main);
+    background-color: var(--body-bg);
+    color: var(--text-heading);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -27,12 +38,13 @@ body {
     overflow: hidden;
 }
 
-/* Animated Background Shapes */
+/* --- Animated Background Shapes (Glow on Dark Body) --- */
 .shape {
     position: absolute;
     filter: blur(80px);
     z-index: -1;
     animation: float 10s infinite ease-in-out alternate;
+    opacity: 0.5;
 }
 
 .shape-1 {
@@ -40,7 +52,7 @@ body {
     left: -10%;
     width: 400px;
     height: 400px;
-    background: rgba(99, 102, 241, 0.3);
+    background: rgba(154, 205, 50, 0.15); /* YellowGreen Glow */
     border-radius: 50%;
 }
 
@@ -49,7 +61,7 @@ body {
     right: -10%;
     width: 300px;
     height: 300px;
-    background: rgba(168, 85, 247, 0.3); /* Purple */
+    background: rgba(245, 222, 179, 0.15); /* Wheat Glow */
     border-radius: 50%;
     animation-delay: -5s;
 }
@@ -59,51 +71,49 @@ body {
     100% { transform: translate(30px, 50px) scale(1.1); }
 }
 
-/* Glassmorphism Card */
+/* --- Main Login Card (Now White) --- */
 .login-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border-radius: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 20px;
     padding: 3rem;
     width: 100%;
-    max-width: 420px;
+    max-width: 450px;
+    /* Soft shadow to pop against dark body */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
     position: relative;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    z-index: 10;
 }
 
-.login-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+/* --- Logo Animation --- */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
 }
 
-.login-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -50%;
-    width: 200%;
-    height: 100%;
-    background: linear-gradient(
-        to right,
-        transparent,
-        rgba(255, 255, 255, 0.03),
-        transparent
-    );
-    transform: skewX(-20deg);
-    animation: shine 6s infinite linear;
-    pointer-events: none;
+.floating-logo {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+    animation: floatUpDown 3.5s ease-in-out infinite;
 }
 
-@keyframes shine {
-    0% { left: -150%; }
-    50%, 100% { left: 150%; }
+@keyframes floatUpDown {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 
-/* Inputs */
+/* --- Typography --- */
+.header-title {
+    color: var(--text-heading);
+}
+
+.header-subtitle {
+    color: var(--text-label);
+}
+
+/* --- Inputs (Light Grey Box Style) --- */
 .input-group {
     position: relative;
     margin-bottom: 1.5rem;
@@ -111,64 +121,99 @@ body {
 
 .input-field {
     width: 100%;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--glass-border);
-    border-radius: 0.75rem;
-    padding: 1rem 1rem 1rem 3rem; /* Left padding for icon */
-    color: var(--text-main);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    padding: 12px 14px 12px 40px; /* Space for icon */
+    color: var(--input-text);
     font-size: 0.95rem;
     outline: none;
     transition: all 0.3s ease;
 }
 
 .input-field:focus {
-    border-color: var(--primary-color);
-    background: rgba(0, 0, 0, 0.3);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .input-icon {
     position: absolute;
-    left: 1rem;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-muted);
-    transition: color 0.3s ease;
+    color: var(--icon-color);
+    pointer-events: none;
+    font-size: 20px;
 }
 
-.input-field:focus + .input-icon {
-    color: var(--primary-color);
-}
-
-/* Button */
+/* --- Button (Graphura Slide Effect) --- */
 .btn-primary {
     width: 100%;
-    padding: 1rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    border: none;
-    border-radius: 0.75rem;
-    color: white;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    padding: 14px;
+    border-radius: 10px;
+    
+    /* Animation Essentials */
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    cursor: pointer;
+    border: none;
     overflow: hidden;
+    z-index: 1;
+    
+    background: var(--btn-bg); /* YellowGreen */
+    color: var(--btn-text);
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.4s;
 }
 
-.btn-primary:hover {
-    filter: brightness(1.1);
-    transform: scale(1.02);
+/* Text on top */
+.btn-primary span {
+    position: relative;
+    z-index: 10;
+    transition: color 0.4s;
+    display: flex;
+    align-items: center;
 }
 
-.btn-primary:active {
-    transform: scale(0.98);
+/* Sliding Layer */
+.btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -15%;
+    width: 135%;
+    height: 100%;
+    z-index: 0;
+    transform: skew(30deg);
+    transition: transform 0.5s cubic-bezier(0.3, 1, 0.8, 1);
+    background: var(--btn-slide); /* Wheat */
 }
 
-/* Utilities */
-.text-gradient {
-    background: linear-gradient(to right, #818cf8, #c084fc);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+.btn-primary:hover::before {
+    transform: translate3d(115%, 0, 0);
+}
+
+.btn-primary:hover span {
+    color: black;
+}
+
+/* --- Links --- */
+a {
+    color: var(--text-label);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: var(--btn-bg);
+}
+
+/* Footer text adjustment */
+.mt-8 p {
+    color: var(--text-label);
 }
