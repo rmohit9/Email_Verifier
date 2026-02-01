@@ -14,11 +14,26 @@
   <body>
     <div class="login-wrapper">
       <div class="login-left">
-        <img
-          src="{% static 'register.jpg' %}"
-          alt="Register Illustration"
-          class="login-illustration"
-        />
+        <div class="visual-container">
+          <div class="icon-stack">
+            <img
+              src="{% static 'graphura-circular.png' %}"
+              alt="Logo"
+              class="floating-logo"
+            />
+            {% comment %}
+            <div class="spinning-ring"></div>
+            {% endcomment %}
+          </div>
+
+          <div class="brand-info">
+            <img
+              src="{% static 'bg removed.png' %}"
+              alt="Graphura Text"
+              class="brand-text-img"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="login-right">
@@ -56,7 +71,7 @@
             <a href="#">Forgot password?</a>
           </div>
 
-          <button type="submit" class="login-btn">Login</button>
+          <button type="submit" class="login-btn"><span>Login</span></button>
 
           <p class="signup-text">
             Don’t have an account?
