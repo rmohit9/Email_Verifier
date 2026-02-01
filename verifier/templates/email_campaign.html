@@ -173,33 +173,33 @@
 					</section>
 
 					<!-- Section 4: Campaign Summary -->
-					<section class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-						<h3 class="font-semibold text-slate-800 mb-3">Campaign Summary</h3>
-						<div class="grid grid-cols-2 gap-4">
-							<div>
-								<p class="text-sm text-slate-600">Total Recipients</p>
-								<p id="totalRecipients" class="text-2xl font-bold text-slate-800">0</p>
-							</div>
-							<div>
-								<p class="text-sm text-slate-600">File Name</p>
-								<p id="summaryFileName" class="text-sm font-mono text-slate-800">—</p>
-							</div>
-						</div>
-					</section>
+			<section id="campaignSummary" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+				<h3 class="font-semibold text-slate-800 mb-3">Campaign Summary</h3>
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<p class="text-sm text-slate-600">Total Recipients</p>
+						<p id="totalRecipients" class="text-2xl font-bold text-slate-800">0</p>
+					</div>
+					<div>
+						<p class="text-sm text-slate-600">File Name</p>
+						<p id="summaryFileName" class="text-sm font-mono text-slate-800">—</p>
+					</div>
+				</div>
+			</section>
 
-					<!-- Action Buttons -->
-					<div class="flex gap-3 pt-4">
-						<button 
-							type="submit" 
-							id="sendBtn"
-							class="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-							disabled
-						>
-							Send Campaign
-						</button>
-						<button 
-							type="reset" 
-							class="flex-1 px-6 py-3 bg-white text-slate-700 font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 transition"
+			<!-- Action Buttons -->
+			<div class="flex gap-3 pt-4">
+				<button 
+					type="submit" 
+					id="sendBtn"
+					class="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+					disabled
+				>
+					Send Campaign
+				</button>
+				<button 
+					type="reset" 
+					id="clearFormBtn"
 						>
 							Clear Form
 						</button>
@@ -649,6 +649,33 @@ function loadCampaigns() {
 				`;
 				tableBody.appendChild(row);
 			});
+
+			// Ensure Recent tab is visible when there are campaigns
+			try {
+				const tabBtnRecent = document.getElementById('tabBtnRecent');
+				const tabBtnCreate = document.getElementById('tabBtnCreate');
+				const createCard = document.getElementById('createCard');
+				const recentCard = document.getElementById('recentCard');
+				if (tabBtnRecent && tabBtnCreate && createCard && recentCard) {
+					tabBtnRecent.classList.add('bg-indigo-600','text-white');
+					tabBtnRecent.classList.remove('bg-white');
+					tabBtnCreate.classList.remove('bg-indigo-600','text-white');
+					tabBtnCreate.classList.add('bg-white');
+					createCard.classList.add('hidden');
+					recentCard.classList.remove('hidden');
+					// force style display as extra safety
+					createCard.style.display = 'none';
+					recentCard.style.display = '';
+					// hide specific summary and action buttons too
+					const campaignSummary = document.getElementById('campaignSummary');
+					const clearFormBtn = document.getElementById('clearFormBtn');
+					if (campaignSummary) { campaignSummary.classList.add('hidden'); campaignSummary.style.display = 'none'; }
+					if (sendBtn) { sendBtn.classList.add('hidden'); sendBtn.style.display = 'none'; }
+					if (clearFormBtn) { clearFormBtn.classList.add('hidden'); clearFormBtn.style.display = 'none'; }
+				}
+			} catch (err) {
+				console.warn('Could not auto-switch to Recent tab:', err);
+			}
 		})
 		.catch(error => {
 			console.error('Error loading campaigns:', error);
@@ -764,27 +791,31 @@ document.getElementById('applyRecipientFilters').addEventListener('click', () =>
 
 // Toggle switch functionality
 const panelToggle = document.getElementById('panelToggle');
-const toggleBg = panelToggle.nextElementSibling;
-const dot = toggleBg.nextElementSibling;
+if (panelToggle) {
+  const toggleBg = panelToggle.nextElementSibling;
+  const dot = toggleBg ? toggleBg.nextElementSibling : null;
+  panelToggle.addEventListener('change', () => {
+    // Find panels at runtime to avoid reference errors if DOM order changes
+    const recipientsPanel = document.getElementById('recipientsPanel');
+    const logsPanel = document.getElementById('logsPanel');
+    if (!recipientsPanel || !logsPanel) return;
 
-panelToggle.addEventListener('change', () => {
-  if (panelToggle.checked) {
-    // Show Logs
-    recipientsPanel.classList.add('hidden');
-    logsPanel.classList.remove('hidden');
-    toggleBg.classList.remove('bg-slate-300');
-    toggleBg.classList.add('bg-indigo-600');
-    dot.classList.add('translate-x-7');
-    fetchLogs(1);
-  } else {
-    // Show Recipients
-    logsPanel.classList.add('hidden');
-    recipientsPanel.classList.remove('hidden');
-    toggleBg.classList.remove('bg-indigo-600');
-    toggleBg.classList.add('bg-slate-300');
-    dot.classList.remove('translate-x-7');
-  }
-});
+    if (panelToggle.checked) {
+      // Show Logs
+      recipientsPanel.classList.add('hidden');
+      logsPanel.classList.remove('hidden');
+      if (toggleBg) { toggleBg.classList.remove('bg-slate-300'); toggleBg.classList.add('bg-indigo-600'); }
+      if (dot) dot.classList.add('translate-x-7');
+      fetchLogs(1);
+    } else {
+      // Show Recipients
+      logsPanel.classList.add('hidden');
+      recipientsPanel.classList.remove('hidden');
+      if (toggleBg) { toggleBg.classList.remove('bg-indigo-600'); toggleBg.classList.add('bg-slate-300'); }
+      if (dot) dot.classList.remove('translate-x-7');
+    }
+  });
+}
 
 
 
@@ -819,30 +850,62 @@ if (campaignsListContainer) {
 }
 
 // Tab switching logic
-const tabBtnCreate = document.getElementById('tabBtnCreate');
-const tabBtnRecent = document.getElementById('tabBtnRecent');
-const createCard = document.getElementById('createCard');
-const recentCard = document.getElementById('recentCard');
+// Register tab handlers after DOM is ready and guard against missing elements
+document.addEventListener('DOMContentLoaded', () => {
+  const tabBtnCreate = document.getElementById('tabBtnCreate');
+  const tabBtnRecent = document.getElementById('tabBtnRecent');
+  const createCard = document.getElementById('createCard');
+  const recentCard = document.getElementById('recentCard');
 
-function switchToCreate() {
-  tabBtnCreate.classList.add('bg-indigo-600', 'text-white');
-  tabBtnCreate.classList.remove('bg-white');
-  tabBtnRecent.classList.remove('bg-indigo-600', 'text-white');
-  recentCard.classList.add('hidden');
-  createCard.classList.remove('hidden');
-}
+  function switchToCreate() {
+    if (!createCard || !recentCard || !tabBtnCreate || !tabBtnRecent) return;
 
-function switchToRecent() {
-  tabBtnRecent.classList.add('bg-indigo-600', 'text-white');
-  tabBtnRecent.classList.remove('bg-white');
-  tabBtnCreate.classList.remove('bg-indigo-600', 'text-white');
-  createCard.classList.add('hidden');
-  recentCard.classList.remove('hidden');
-  loadCampaigns();
-}
+    const campaignSummary = document.getElementById('campaignSummary');
+    const clearFormBtn = document.getElementById('clearFormBtn');
 
-if (tabBtnCreate) tabBtnCreate.addEventListener('click', switchToCreate);
-if (tabBtnRecent) tabBtnRecent.addEventListener('click', switchToRecent);
+    tabBtnCreate.classList.add('bg-indigo-600','text-white');
+    tabBtnCreate.classList.remove('bg-white');
+    tabBtnRecent.classList.remove('bg-indigo-600','text-white');
+    tabBtnRecent.classList.add('bg-white');
+
+    // Show create form and related controls
+    recentCard.classList.add('hidden');
+    recentCard.style.display = 'none';
+    createCard.classList.remove('hidden');
+    createCard.style.display = '';
+
+    if (campaignSummary) { campaignSummary.classList.remove('hidden'); campaignSummary.style.display = ''; }
+    if (sendBtn) { sendBtn.classList.remove('hidden'); sendBtn.style.display = ''; }
+    if (clearFormBtn) { clearFormBtn.classList.remove('hidden'); clearFormBtn.style.display = ''; }
+  }
+
+  function switchToRecent() {
+    if (!createCard || !recentCard || !tabBtnCreate || !tabBtnRecent) return;
+
+    const campaignSummary = document.getElementById('campaignSummary');
+    const clearFormBtn = document.getElementById('clearFormBtn');
+
+    tabBtnRecent.classList.add('bg-indigo-600','text-white');
+    tabBtnRecent.classList.remove('bg-white');
+    tabBtnCreate.classList.remove('bg-indigo-600','text-white');
+    tabBtnCreate.classList.add('bg-white');
+
+    // Hide create form and related controls
+    createCard.classList.add('hidden');
+    createCard.style.display = 'none';
+    recentCard.classList.remove('hidden');
+    recentCard.style.display = '';
+
+    if (campaignSummary) { campaignSummary.classList.add('hidden'); campaignSummary.style.display = 'none'; }
+    if (sendBtn) { sendBtn.classList.add('hidden'); sendBtn.style.display = 'none'; }
+    if (clearFormBtn) { clearFormBtn.classList.add('hidden'); clearFormBtn.style.display = 'none'; }
+
+    loadCampaigns();
+  }
+
+  if (tabBtnCreate) tabBtnCreate.addEventListener('click', (e) => { e.preventDefault(); switchToCreate(); });
+  if (tabBtnRecent) tabBtnRecent.addEventListener('click', (e) => { e.preventDefault(); switchToRecent(); });
+});
 
 // -------------------- Campaign Logs: fetching / edit / delete / bulk delete --------------------
 let logsPage = 1;

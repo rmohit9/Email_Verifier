@@ -1188,7 +1188,7 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         deleted, _ = CampaignLog.objects.filter(campaign=campaign, id__in=ids).delete()
         return Response({'deleted': deleted})
 
-    @action(detail=True, methods=['get'], url_path='recipients/export')
+    @action(detail=True, methods=['get'], url_path='recipients/export', renderer_classes=[CSVRenderer])
     def export_recipients(self, request, pk=None):
         """Export campaign recipients as CSV"""
         campaign = self.get_object()
