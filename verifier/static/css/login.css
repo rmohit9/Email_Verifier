@@ -1,156 +1,340 @@
+/* =========================================
+   1. GLOBAL RESET & BASE STYLES
+   ========================================= */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* PAGE CENTERING */
 body {
-  background: #f8fafc;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+    /* background: #f8fafc; */
+    background-color:#020617;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
 }
 
-/* MAIN CARD */
+/* =========================================
+   2. MAIN CARD LAYOUT
+   ========================================= */
 .login-wrapper {
-  width: 900px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  display: flex;
-  overflow: hidden;
-  margin-bottom: 18px;
-  
+    width: 800px;      /* Compact card width */
+    min-height: 500px; /* Compact card height */
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    overflow: hidden;
 }
 
-/* LEFT IMAGE SIDE */
+/* =========================================
+   3. LEFT PANEL (ANIMATION & BRANDING)
+   ========================================= */
 .login-left {
-  width: 45%;
-  min-height: 350px;      /* consistent panel size */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #eaf1ff;
-  padding: 0px;
+    width: 45%;
+    /* background: #f1f5f9; */
+    /* background-color: rgb(210, 184, 134); */
+    background-color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 30px;
+    border-right: 1px solid #e2e8f0;
 }
 
-
-/* IMAGE */
-.login-illustration {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;      /* fills area, crops if necessary */
+.visual-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
 }
 
+/* --- Icon Stack (Ring + Logo) --- */
+.icon-stack {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
 
-/* RIGHT FORM SIDE */
+.floating-logo {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    z-index: 2;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+    /* Float animation */
+    animation: floatUpDown 3.5s ease-in-out infinite;
+}
+
+.spinning-ring {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 50%;
+    /* Rotation animation */
+    animation: rotateClock 25s linear infinite;
+}
+
+/* --- Brand Text Image --- */
+.brand-info {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.brand-text-img {
+    width: 180px;
+    height: auto;
+    object-fit: contain;
+    /* Syncs with upper logo animation */
+    animation: floatUpDown 3.5s ease-in-out infinite;
+}
+
+/* =========================================
+   4. RIGHT PANEL (LOGIN FORM)
+   ========================================= */
 .login-right {
-  width: 55%;
-  padding: 40px;
+    width: 55%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #0f172a;
 }
 
-/* FORM FIELDS */
+.login-right h3 {
+    font-size: 22px;
+    /* color: #0f172a; */
+    color: wheat;
+    margin-bottom: 25px;
+    font-weight: 700;
+    text-align: center; /* <--- CENTERED THE HEADING HERE */
+}
+
+/* --- Input Fields --- */
 .input-group {
-  margin-bottom: 18px;
+    margin-bottom: 18px;
 }
 
 .input-group label {
-  font-size: 13px;
-  color: #475569;
-  margin-bottom: 6px;
-  display: block;
+    font-size: 13px;
+    /* color: #475569; */
+    color: #cbd5e1;
+    margin-bottom: 6px;
+    display: block;
+    font-weight: 500;
 }
 
 .input-group input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  font-size: 14px;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
 
 .input-group input:focus {
-  outline: none;
-  border-color: #2563eb;
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-/* OPTIONS ROW */
+/* --- Options --- */
 .login-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 20px;
+    /* color: #64748b; */
+    color: #cbd5e1;
+}
+
+.login-options input[type="checkbox"] {
+    margin-right: 6px;
 }
 
 .login-options a {
-  text-decoration: none;
-  color: #2563eb;
+    text-decoration: none;
+    /* color: #2563eb; */
+    color: wheat;
+    font-weight: 500;
 }
 
+.login-options a:hover {
+    text-decoration: underline;
+}
 
-/* BUTTON */
+/* --- Buttons --- */
+
+/* --- ANIMATED LOGIN BUTTON --- */
 .login-btn {
-  width: 100%;
-  padding: 12px;
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  cursor: pointer;
+    /* Layout specific to the login form */
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 10px;
+    
+    /* Animation Essentials */
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    cursor: pointer;
+    border: none;
+    overflow: hidden; /* Keeps the sliding layer inside */
+    z-index: 1;
+    transition: all 0.4s;
+    
+    /* Font Styling */
+    font-family: "Segoe UI", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    
+    /* COLORS (From your Home Page: YellowGreen Theme) */
+    background: yellowgreen; 
+    color: black;
+}
+
+/* Ensure the text sits ON TOP of the animation */
+.login-btn span {
+    position: relative;
+    z-index: 10;
+    transition: color 0.4s;
+}
+
+/* The Sliding Layer (Invisible by default, slides in on hover) */
+.login-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -15%; /* Start slightly off-screen */
+    width: 135%;
+    height: 100%;
+    z-index: 0;
+    transform: skew(30deg); /* The diagonal angle */
+    transition: transform 0.5s cubic-bezier(0.3, 1, 0.8, 1);
+    
+    /* The Slide Color */
+    background: wheat; 
+}
+
+/* The Trigger: Slide the layer when hovered */
+.login-btn:hover::before {
+    transform: translate3d(115%, 0, 0); /* Slides across to the right */
+}
+
+/* Optional: Change text color on hover if needed */
+.login-btn:hover span {
+    color: black; 
+}
+
+/* .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.1s ease;
 }
 
 .login-btn:hover {
-  background: #1d4ed8;
+    background: #1d4ed8;
 }
 
-/* UNDER TEXT */
+.login-btn:active {
+    transform: scale(0.98);
+} */
+
+/* --- Signup Link --- */
 .signup-text {
-  margin-top: 16px;
-  font-size: 13px;
-  text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    text-align: center;
+    color: #64748b;
 }
 
 .signup-text a {
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 500;
+    /* color: #2563eb; */
+    color: wheat;
+    text-decoration: none;
+    font-weight: 600;
 }
 
+.signup-text a:hover {
+    text-decoration: underline;
+}
 
+/* =========================================
+   5. ANIMATIONS (KEYFRAMES)
+   ========================================= */
+@keyframes floatUpDown {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
 
-/* 🔥 MOBILE RESPONSIVE */
+@keyframes rotateClock {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* =========================================
+   6. RESPONSIVE DESIGN
+   ========================================= */
 @media (max-width: 768px) {
+    .login-wrapper {
+        flex-direction: column;
+        width: 100%;
+        max-width: 420px;
+        min-height: auto;
+    }
 
-  .login-wrapper {
-    width: 100%;
-    max-width: 420px;
-    flex-direction: column;
-  }
+    .login-left, 
+    .login-right {
+        width: 100%;
+    }
 
-  .login-left,
-  .login-right {
-    width: 100%;
-  }
+    .login-left {
+        padding: 40px 20px;
+        order: 1; 
+        min-height: 280px;
+    }
 
-  /* form first */
-  .login-right {
-    order: 1;
-    padding: 24px;
-  }
-
-  /* image below */
-  .login-left {
-    order: 2;
-  }
-
-  .login-illustration {
-    width: 95%;
-    height: auto;
-  }
+    .login-right {
+        order: 2;
+        padding: 30px 24px;
+    }
+    
+    .icon-stack {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .floating-logo {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .spinning-ring {
+        width: 150px;
+        height: 150px;
+    }
 }

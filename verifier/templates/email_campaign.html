@@ -1,0 +1,1076 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Email Campaign Setup</title>
+
+		<!-- Fonts -->
+		<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet" />
+		<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+		<!-- Tailwind -->
+		<script src="https://cdn.tailwindcss.com"></script>
+
+		<!-- Custom CSS -->
+		<link rel="stylesheet" href="{% static 'css/upload.css' %}" />
+</head>
+
+<body class="bg-slate-50 font-display text-slate-700">
+	<!-- NAVBAR -->
+	<header class="navbar">
+		<div class="logo">
+			<img src="{% static 'bg removed.png' %}" alt="EmailVerify Pro Logo" class="logo-img" />
+		</div>
+
+		<nav>
+			<a href="{% url 'home' %}">Home</a>
+			<a href="{% url 'verification_results' %}">Results</a>
+			<a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+		</nav>
+
+		<div class="nav-buttons">
+			<a href="{% url 'login' %}" class="login-btn">Login</a>
+			<a href="{% url 'signup' %}" class="primary-btn">Get Started</a>
+		</div>
+	</header>
+
+	<!-- MAIN -->
+	<main class="max-w-4xl mx-auto px-6 py-10">
+		<!-- TITLE -->
+		<div class="mb-10">
+			<h2 class="text-4xl font-extrabold text-slate-900 mb-2">Email Campaigns</h2>
+			<p class="text-slate-500 text-lg">Create and send email campaigns to your audience. Upload CSV or paste emails manually.</p>
+		</div>
+
+			<!-- Tab Controls -->
+			<div class="mb-4">
+			  <div class="flex gap-3">
+			    <button id="tabBtnCreate" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Create Email Campaign</button>
+			    <button id="tabBtnRecent" class="px-4 py-2 bg-white border rounded-md">Recent Campaigns</button>
+			  </div>
+			</div>
+
+			<!-- Campaign Form Card -->
+			<div id="createCard" class="bg-white rounded-lg shadow-md p-8 border border-slate-200">
+
+				<form id="campaignForm" enctype="multipart/form-data" class="space-y-6">
+					{% csrf_token %}
+
+					<!-- Section 1: Upload CSV -->
+					<section>
+						<h2 class="text-xl font-semibold text-slate-800 mb-4">Upload Email List (CSV)</h2>
+						<p class="text-slate-600 text-sm mb-4">Upload your email list in CSV format. The file must have an 'email' column.</p>
+
+						<div class="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer" id="csvDropZone">
+							<svg class="w-12 h-12 mx-auto text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+							</svg>
+							<input type="file" id="csvFile" name="csv_file" accept=".csv" class="hidden" required>
+							<p class="text-slate-600 font-medium">
+								<span id="csvFileName">Drag and drop your CSV file here, or</span>
+								<button type="button" class="text-blue-600 underline">click to select</button>
+							</p>
+							<p class="text-slate-500 text-sm mt-2">Max file size: 5MB</p>
+						</div>
+
+						<!-- Sample CSV Format Link -->
+						<div class="mt-4">
+							<button type="button" id="sampleCsvBtn" class="text-blue-600 text-sm hover:underline">
+								📋 View Sample CSV Format
+							</button>
+						</div>
+
+						<!-- CSV Preview -->
+						<div id="csvPreview" class="hidden mt-4 p-4 bg-slate-50 rounded border border-slate-200">
+							<p class="text-sm font-semibold text-slate-700 mb-2">File Selected:</p>
+							<p id="previewFileName" class="text-sm text-slate-600 font-mono"></p>
+							<p id="previewRecords" class="text-sm text-slate-600 mt-1"></p>
+						</div>
+					</section>
+
+					<!-- Section 2: Email Subject -->
+					<section>
+						<h2 class="text-xl font-semibold text-slate-800 mb-4">Email Subject</h2>
+						<input 
+							type="text" 
+							name="subject" 
+							id="emailSubject"
+							placeholder="Enter your email subject..." 
+							class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+							required
+						>
+						<p class="text-slate-500 text-sm mt-2">The subject will be the same for all recipients</p>
+					</section>
+
+					<!-- Section 3: Email Message -->
+					<section>
+						<h2 class="text-xl font-semibold text-slate-800 mb-4">Email Message</h2>
+						
+						<!-- Rich Text Toolbar -->
+						<div class="flex gap-2 mb-3 p-3 bg-slate-50 rounded-t-lg border border-b-0 border-slate-300">
+							<button type="button" class="p-2 hover:bg-slate-200 rounded" title="Bold">
+								<strong>B</strong>
+							</button>
+							<button type="button" class="p-2 hover:bg-slate-200 rounded" title="Italic">
+								<em>I</em>
+							</button>
+							<button type="button" class="p-2 hover:bg-slate-200 rounded" title="Link">
+								🔗
+							</button>
+							<button type="button" class="p-2 hover:bg-slate-200 rounded" title="Image">
+								🖼️
+							</button>
+							<button type="button" class="p-2 hover:bg-slate-200 rounded" title="Emoji">
+								😊
+							</button>
+						</div>
+
+						<!-- Text Editor -->
+						<textarea 
+							name="message" 
+							id="emailMessage"
+							placeholder="Write your email content here..." 
+							rows="10"
+							class="w-full px-4 py-3 border border-slate-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+							required
+						></textarea>
+
+						<p class="text-slate-500 text-sm mt-2">This message will be sent to all recipients</p>
+						<p class="text-slate-500 text-sm">Supports HTML formatting for rich email content</p>
+				
+					<!-- Advanced Settings -->
+					<section class="mt-4">
+						<button type="button" id="toggleAdvanced" class="text-sm text-blue-600 hover:underline mb-3">Show advanced settings</button>
+						<div id="advancedSettings" class="hidden p-4 bg-slate-50 border border-slate-200 rounded">
+							<h3 class="font-semibold text-slate-800 mb-3">Advanced Delivery Settings (optional)</h3>
+							<div class="grid grid-cols-1 gap-3">
+								<label class="text-sm text-slate-600">Sender Name (optional)</label>
+								<input name="sender_name" type="text" class="w-full border rounded-md p-2" placeholder="e.g., Your Company">
+								<label class="text-sm text-slate-600">Sender Email (optional)</label>
+								<input name="sender_email" type="email" class="w-full border rounded-md p-2" placeholder="noreply@yourdomain.com">
+								<label class="text-sm text-slate-600">Reply-To (optional)</label>
+								<input name="reply_to" type="email" class="w-full border rounded-md p-2" placeholder="replyto@yourdomain.com">
+								<div class="flex gap-3">
+									<div class="w-1/2">
+										<label class="text-sm text-slate-600">Batch Size</label>
+										<input name="batch_size" type="number" min="1" value="50" class="w-full border rounded-md p-2">
+									</div>
+									<div class="w-1/2">
+										<label class="text-sm text-slate-600">Delay (sec)</label>
+										<input name="delay_between_batches" type="number" step="0.1" min="0" value="1.0" class="w-full border rounded-md p-2">
+									</div>
+								</div>
+								<label class="text-sm text-slate-600">Schedule (optional)</label>
+								<input name="schedule_at" type="datetime-local" class="w-full border rounded-md p-2">
+								<label class="text-sm text-slate-600">Tags (comma separated)</label>
+								<input name="tags" type="text" class="w-full border rounded-md p-2" placeholder="promotion, welcome">
+								<div class="flex gap-3 items-center">
+									<label class="inline-flex items-center gap-2"><input name="enable_open_tracking" type="checkbox" checked> Enable open tracking</label>
+									<label class="inline-flex items-center gap-2"><input name="enable_click_tracking" type="checkbox" checked> Enable click tracking</label>
+								</div>
+							</div>
+						</div>
+					</section>
+
+					<!-- Section 4: Campaign Summary -->
+					<section class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+						<h3 class="font-semibold text-slate-800 mb-3">Campaign Summary</h3>
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<p class="text-sm text-slate-600">Total Recipients</p>
+								<p id="totalRecipients" class="text-2xl font-bold text-slate-800">0</p>
+							</div>
+							<div>
+								<p class="text-sm text-slate-600">File Name</p>
+								<p id="summaryFileName" class="text-sm font-mono text-slate-800">—</p>
+							</div>
+						</div>
+					</section>
+
+					<!-- Action Buttons -->
+					<div class="flex gap-3 pt-4">
+						<button 
+							type="submit" 
+							id="sendBtn"
+							class="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+							disabled
+						>
+							Send Campaign
+						</button>
+						<button 
+							type="reset" 
+							class="flex-1 px-6 py-3 bg-white text-slate-700 font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 transition"
+						>
+							Clear Form
+						</button>
+					</div>
+
+				</form>
+
+				<!-- Messages Area -->
+				<div id="alertContainer" class="mt-6"></div>
+
+			</div>
+
+			<!-- Sent Campaigns List -->
+			<div id="recentCard" class="mt-8 bg-white rounded-lg shadow-md p-8 border border-slate-200 hidden">
+				<h2 class="text-xl font-semibold text-slate-800 mb-4">Recent Campaigns</h2>
+
+				<div id="campaignsLoader" class="text-center py-8 text-slate-500">
+					Loading campaigns...
+				</div>
+
+				<div id="campaignsList" class="hidden">
+					<div class="overflow-x-auto">
+						<table class="w-full text-sm">
+							<thead class="bg-slate-50 text-slate-500">
+								<tr>
+									<th class="p-3 text-left">Subject</th>
+									<th class="p-3 text-left">Recipients</th>
+									<th class="p-3 text-center">Sent</th>
+									<th class="p-3 text-center">Failed</th>
+									<th class="p-3 text-left">Status</th>
+									<th class="p-3 text-left">Created</th>
+
+								</tr>
+							</thead>
+							<tbody id="campaignsTableBody">
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				<div id="campaignsEmpty" class="text-center py-8 text-slate-500">
+					No campaigns yet. Create one above!
+				</div>
+			</div>
+
+		</div>
+	</main>
+
+</div>
+
+<!-- Campaign Details Modal -->
+<div id="campaignDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+	<div class="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6">
+		<div class="flex justify-between items-center mb-4">
+			<h3 id="campaignDetailsTitle" class="text-lg font-semibold">Campaign Details</h3>
+			<button id="closeCampaignDetails" class="px-3 py-1 border rounded">Close</button>
+		</div>
+
+		<!-- Toggle Switch -->
+		<div class="mb-4 flex items-center justify-center">
+			<label class="inline-flex items-center cursor-pointer">
+				<span class="mr-3 text-sm font-medium text-slate-700">Recipients</span>
+				<div class="relative">
+					<input type="checkbox" id="panelToggle" class="sr-only">
+					<div class="w-14 h-7 bg-slate-300 rounded-full shadow-inner"></div>
+					<div class="dot absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-0.5 transition transform duration-300 ease-in-out"></div>
+				</div>
+				<span class="ml-3 text-sm font-medium text-slate-700">Logs</span>
+			</label>
+		</div>
+
+		<!-- Recipients Panel -->
+		<div id="recipientsPanel">
+			<div class="flex gap-3 items-center mb-4">
+				<input id="recipientSearch" type="text" placeholder="Search by email" class="border rounded p-2 w-64">
+				<select id="recipientStatusFilter" class="border rounded p-2">
+					<option value="">All</option>
+					<option value="sent">Sent</option>
+					<option value="failed">Failed</option>
+					<option value="pending">Pending</option>
+				</select>
+				<button id="applyRecipientFilters" class="px-3 py-1 bg-indigo-600 text-white rounded">Filter</button>
+				<button id="exportRecipientsCSV" class="px-3 py-1 bg-green-600 text-white rounded">Export CSV</button>
+			</div>
+
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead class="bg-slate-50 text-slate-500">
+						<tr>
+							<th class="p-3 text-left">Email</th>
+							<th class="p-3 text-left">Status</th>
+							<th class="p-3 text-left">Sent At</th>
+							<th class="p-3 text-left">Failure Reason</th>
+						</tr>
+					</thead>
+					<tbody id="recipientsTableBody"></tbody>
+				</table>
+			</div>
+
+			<div id="recipientsPagination" class="mt-4 flex justify-between items-center"></div>
+		</div>
+
+		<!-- Logs Panel -->
+		<div id="logsPanel" class="hidden">
+			<div class="flex items-center gap-3 mb-4">
+				<input id="logsSearch" type="text" placeholder="Search logs or recipient email" class="border rounded p-2 w-64">
+				<select id="logsStatusFilter" class="border rounded p-2">
+					<option value="">All</option>
+					<option value="sent">Sent</option>
+					<option value="failed">Failed</option>
+				</select>
+				<button id="applyLogsFilters" class="px-3 py-1 bg-indigo-600 text-white rounded">Filter</button>
+				<button id="exportLogsCSV" class="px-3 py-1 bg-green-600 text-white rounded">Export CSV</button>
+				<button id="bulkDeleteLogsBtn" class="px-3 py-1 bg-red-600 text-white rounded" disabled>Bulk Delete</button>
+			</div>
+
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-500">
+        <tr>
+          <th class="p-3 text-left"><input type="checkbox" id="logsSelectAll"></th>
+          <th class="p-3 text-left">Log ID</th>
+          <th class="p-3 text-left">Email</th>
+          <th class="p-3 text-left">Status</th>
+          <th class="p-3 text-left">Failure Reason</th>
+          <th class="p-3 text-left">Timestamp</th>
+          <th class="p-3 text-right">Actions</th>
+        </tr>
+      </thead>
+					<tbody id="logsTableBody"></tbody>
+				</table>
+			</div>
+
+			<div id="logsPagination" class="mt-4 flex justify-between items-center"></div>
+		</div>
+	</div>
+</div>
+
+<!-- Edit Log Modal -->
+<div id="editLogModal" class="hidden fixed inset-0 bg-black/40 items-center justify-center z-50">
+	<div class="bg-white w-full max-w-lg rounded-xl p-6 shadow-lg">
+		<h3 class="text-xl font-bold mb-4">Edit Log Entry</h3>
+		<div class="mb-3">
+			<label class="text-sm text-slate-600">Level</label>
+			<select id="editLogLevel" class="w-full p-2 border rounded-md">
+				<option value="info">Info</option>
+				<option value="warning">Warning</option>
+				<option value="error">Error</option>
+				<option value="success">Success</option>
+			</select>
+		</div>
+		<div class="mb-3">
+			<label class="text-sm text-slate-600">Message / Notes</label>
+			<textarea id="editLogMessage" class="w-full p-2 border rounded-md" rows="4"></textarea>
+		</div>
+		<div class="flex justify-end gap-3">
+			<button id="cancelEditLog" class="px-4 py-2 border rounded">Cancel</button>
+			<button id="saveEditLog" class="px-4 py-2 bg-indigo-600 text-white rounded">Save</button>
+		</div>
+	</div>
+</div>
+
+<!-- Sample CSV Modal -->
+<div id="sampleCsvModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+	<div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+		<h3 class="text-lg font-semibold text-slate-800 mb-4">Sample CSV Format</h3>
+		<pre class="bg-slate-100 p-3 rounded text-xs overflow-auto mb-4"><code>email
+user1@example.com
+user2@example.com
+user3@example.com
+john.doe@company.com
+jane.smith@company.com</code></pre>
+		<button type="button" class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="document.getElementById('sampleCsvModal').classList.add('hidden')">
+			Close
+		</button>
+	</div>
+</div>
+
+<script>
+// ===================================================================
+// CSV FILE HANDLING
+// ===================================================================
+
+const csvDropZone = document.getElementById('csvDropZone');
+const csvFile = document.getElementById('csvFile');
+const csvFileName = document.getElementById('csvFileName');
+const csvPreview = document.getElementById('csvPreview');
+const previewFileName = document.getElementById('previewFileName');
+const previewRecords = document.getElementById('previewRecords');
+const totalRecipients = document.getElementById('totalRecipients');
+const summaryFileName = document.getElementById('summaryFileName');
+const sendBtn = document.getElementById('sendBtn');
+const campaignForm = document.getElementById('campaignForm');
+const alertContainer = document.getElementById('alertContainer');
+
+// Click to select file
+csvDropZone.addEventListener('click', () => csvFile.click());
+
+// Drag and drop
+csvDropZone.addEventListener('dragover', (e) => {
+	e.preventDefault();
+	csvDropZone.classList.add('border-blue-500', 'bg-blue-50');
+});
+
+csvDropZone.addEventListener('dragleave', () => {
+	csvDropZone.classList.remove('border-blue-500', 'bg-blue-50');
+});
+
+csvDropZone.addEventListener('drop', (e) => {
+	e.preventDefault();
+	csvDropZone.classList.remove('border-blue-500', 'bg-blue-50');
+	
+	const files = e.dataTransfer.files;
+	if (files.length > 0) {
+		csvFile.files = files;
+		handleCsvChange();
+	}
+});
+
+csvFile.addEventListener('change', handleCsvChange);
+
+function handleCsvChange() {
+	const file = csvFile.files[0];
+	if (!file) return;
+
+	if (!file.name.endsWith('.csv')) {
+		showAlert('File must be a CSV file', 'error');
+		csvFile.value = '';
+		return;
+	}
+
+	if (file.size > 5 * 1024 * 1024) {
+		showAlert('File exceeds 5MB limit', 'error');
+		csvFile.value = '';
+		return;
+	}
+
+	// Parse CSV to count emails
+	const reader = new FileReader();
+	reader.onload = (e) => {
+		try {
+			const csv = e.target.result;
+			const lines = csv.split('\n');
+			
+			// Check for email header
+			if (!lines[0].toLowerCase().includes('email')) {
+				showAlert('CSV must have an "email" column', 'error');
+				csvFile.value = '';
+				return;
+			}
+
+			// Count emails
+			const emails = lines.slice(1).filter(line => line.trim() !== '');
+			const emailCount = emails.length;
+
+			// Update display
+			csvFileName.textContent = file.name;
+			previewFileName.textContent = `📄 ${file.name}`;
+			previewRecords.textContent = `📊 ${emailCount} email(s) found`;
+			csvPreview.classList.remove('hidden');
+			totalRecipients.textContent = emailCount;
+			summaryFileName.textContent = file.name;
+
+			// Enable send button if all fields are filled
+			checkFormValidity();
+
+			showAlert(`✅ CSV loaded successfully with ${emailCount} recipients`, 'success');
+		} catch (err) {
+			showAlert('Error parsing CSV: ' + err.message, 'error');
+			csvFile.value = '';
+		}
+	};
+	reader.readAsText(file);
+}
+
+// Sample CSV Modal
+document.getElementById('sampleCsvBtn').addEventListener('click', (e) => {
+	e.preventDefault();
+	document.getElementById('sampleCsvModal').classList.remove('hidden');
+});
+
+// Form validation
+function checkFormValidity() {
+	const hasFile = csvFile.files.length > 0;
+	const hasSubject = document.getElementById('emailSubject').value.trim() !== '';
+	const hasMessage = document.getElementById('emailMessage').value.trim() !== '';
+	
+	sendBtn.disabled = !(hasFile && hasSubject && hasMessage);
+}
+
+document.getElementById('emailSubject').addEventListener('input', checkFormValidity);
+document.getElementById('emailMessage').addEventListener('input', checkFormValidity);
+
+// Form submission
+// Toggle advanced settings
+const toggleAdvanced = document.getElementById('toggleAdvanced');
+const advancedSettings = document.getElementById('advancedSettings');
+if (toggleAdvanced) {
+	toggleAdvanced.addEventListener('click', (e) => {
+		e.preventDefault();
+		if (advancedSettings.classList.contains('hidden')) {
+			advancedSettings.classList.remove('hidden');
+			toggleAdvanced.textContent = 'Hide advanced settings';
+		} else {
+			advancedSettings.classList.add('hidden');
+			toggleAdvanced.textContent = 'Show advanced settings';
+		}
+	});
+}
+
+campaignForm.addEventListener('submit', async (e) => {
+	e.preventDefault();
+
+	// Build FormData and normalize tags array
+	const raw = new FormData(campaignForm);
+	const formData = new FormData();
+	for (const pair of raw.entries()) {
+		const key = pair[0];
+		const value = pair[1];
+		if (key === 'tags') {
+			// split comma separated tags into multiple entries
+			const tagsStr = String(value || '').trim();
+			if (tagsStr) {
+				const tags = tagsStr.split(',').map(t => t.trim()).filter(Boolean);
+				tags.forEach(tag => formData.append('tags', tag));
+			}
+		} else if (key === 'enable_open_tracking' || key === 'enable_click_tracking') {
+			// ensure boolean value is sent
+			const el = document.querySelector(`[name="${key}"]`);
+			formData.set(key, el && el.checked ? 'true' : 'false');
+		} else {
+			formData.append(key, value);
+		}
+	}
+
+	sendBtn.disabled = true;
+	sendBtn.textContent = 'Sending...';
+
+	try {
+		const response = await fetch('/api/campaigns/', {
+			method: 'POST',
+			headers: {
+				'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+			},
+			body: formData
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.detail || 'Failed to create campaign');
+		}
+
+		const campaign = await response.json();
+
+		// Send campaign (synchronous)
+		const sendResponse = await fetch(`/api/campaigns/${campaign.campaign_id}/send/`, {
+			method: 'POST',
+			headers: {
+				'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+			}
+		});
+
+		if (!sendResponse.ok) {
+			const err = await sendResponse.json().catch(() => ({}));
+			throw new Error(err.detail || 'Failed to send campaign');
+		}
+
+		showAlert('✅ Campaign created and sent!', 'success');
+		campaignForm.reset();
+		csvPreview.classList.add('hidden');
+		totalRecipients.textContent = '0';
+		summaryFileName.textContent = '—';
+		loadCampaigns();
+		sendBtn.disabled = true;
+		sendBtn.textContent = 'Send Campaign';
+	} catch (error) {
+		showAlert('❌ ' + error.message, 'error');
+		sendBtn.disabled = false;
+		sendBtn.textContent = 'Send Campaign';
+	}
+});
+
+// Load campaigns
+function loadCampaigns() {
+	fetch('/api/campaigns/')
+		.then(r => r.json())
+		.then(campaigns => {
+			// Support array responses and paginated objects (DRF pagination returns { count, next, results })
+			const items = Array.isArray(campaigns) ? campaigns : (campaigns && campaigns.results ? campaigns.results : []);
+			const campaignsLoader = document.getElementById('campaignsLoader');
+			const campaignsList = document.getElementById('campaignsList');
+			const campaignsEmpty = document.getElementById('campaignsEmpty');
+			const tableBody = document.getElementById('campaignsTableBody');
+
+			campaignsLoader.classList.add('hidden');
+
+			if (!items || items.length === 0) {
+				campaignsList.classList.add('hidden');
+				campaignsEmpty.classList.remove('hidden');
+				return;
+			}
+
+			campaignsEmpty.classList.add('hidden');
+			campaignsList.classList.remove('hidden');
+			tableBody.innerHTML = '';
+
+			items.forEach(campaign => {
+				const statusColor = {
+					'draft': 'bg-gray-100 text-gray-800',
+					'sending': 'bg-blue-100 text-blue-800',
+					'completed': 'bg-green-100 text-green-800',
+					'failed': 'bg-red-100 text-red-800'
+				}[campaign.status] || 'bg-gray-100 text-gray-800';
+
+				const row = document.createElement('tr');
+				row.className = 'border-t hover:bg-slate-50';
+				row.innerHTML = `
+						<td class="p-3 text-slate-700 font-medium"><button class="viewCampaignBtn text-blue-600 underline" data-id="${campaign.campaign_id}">${campaign.subject}</button></td>
+					<td class="p-3 text-slate-700">${campaign.total_recipients}</td>
+					<td class="p-3 text-center text-green-600 font-semibold">${campaign.sent_count}</td>
+					<td class="p-3 text-center text-red-600 font-semibold">${campaign.failed_count}</td>
+					<td class="p-3">
+						<span class="px-2 py-1 rounded text-xs font-semibold ${statusColor}">
+							${campaign.status.toUpperCase()}
+						</span>
+					</td>
+					<td class="p-3 text-slate-600 text-xs">${new Date(campaign.created_at).toLocaleDateString()}</td>
+				`;
+				tableBody.appendChild(row);
+			});
+		})
+		.catch(error => {
+			console.error('Error loading campaigns:', error);
+			document.getElementById('campaignsLoader').textContent = 'Failed to load campaigns';
+		});
+}
+
+let activeCampaignId = null;
+let recipientsPage = 1;
+
+function viewCampaignDetails(campaignId) {
+	activeCampaignId = campaignId;
+	document.getElementById('campaignDetailsTitle').textContent = 'Campaign Details — ' + campaignId;
+	document.getElementById('campaignDetailsModal').classList.remove('hidden');
+	document.getElementById('campaignDetailsModal').classList.add('flex');
+	recipientsPage = 1;
+	// Reset toggle to Recipients
+	const panelToggle = document.getElementById('panelToggle');
+	const toggleBg = panelToggle.nextElementSibling;
+	const dot = toggleBg.nextElementSibling;
+	panelToggle.checked = false;
+	toggleBg.classList.remove('bg-indigo-600');
+	toggleBg.classList.add('bg-slate-300');
+	dot.classList.remove('translate-x-7');
+	fetchRecipients();
+}
+
+async function fetchRecipients(page = 1) {
+	const search = document.getElementById('recipientSearch').value.trim();
+	const status = document.getElementById('recipientStatusFilter').value;
+	const params = new URLSearchParams();
+	params.set('page', page);
+	params.set('page_size', 20);
+	if (search) params.set('search', search);
+	if (status) params.set('status', status);
+
+	const url = `/api/campaigns/${activeCampaignId}/recipients/?` + params.toString();
+	const res = await fetch(url);
+	if (!res.ok) {
+		document.getElementById('recipientsTableBody').innerHTML = '<tr><td colspan="4" class="p-6 text-center text-red-600">Failed to load recipients</td></tr>';
+		return;
+	}
+	const data = await res.json();
+	const items = data.results || data;
+	renderRecipients(items);
+
+	// Pagination
+	recipientsPage = page;
+	const total = data.count ? Math.ceil(data.count / 20) : 1;
+	renderRecipientsPagination(total);
+}
+
+function renderRecipients(items) {
+	const tbody = document.getElementById('recipientsTableBody');
+	tbody.innerHTML = '';
+	if (!items || items.length === 0) {
+		tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">No recipients found</td></tr>';
+		return;
+	}
+
+	items.forEach(r => {
+		const row = document.createElement('tr');
+		row.className = 'border-t hover:bg-slate-50';
+		const failure = r.error_message ? r.error_message : '';
+		const statusBadge = r.status === 'sent' ? '<span class="px-2 py-1 rounded text-xs bg-green-100 text-green-800">SENT</span>' : r.status === 'failed' ? '<span class="px-2 py-1 rounded text-xs bg-red-100 text-red-800">FAILED</span>' : '<span class="px-2 py-1 rounded text-xs bg-amber-100 text-amber-800">PENDING</span>';
+		row.innerHTML = `
+			<td class="p-3 text-slate-700">${r.email}</td>
+			<td class="p-3">${statusBadge}</td>
+			<td class="p-3 text-slate-600">${r.sent_at ? new Date(r.sent_at).toLocaleString() : '—'}</td>
+			<td class="p-3 text-slate-700">${failure}</td>
+		`;
+		tbody.appendChild(row);
+	});
+}
+
+function renderRecipientsPagination(totalPages) {
+	const el = document.getElementById('recipientsPagination');
+	el.innerHTML = '';
+	const prev = document.createElement('button');
+	prev.textContent = 'Previous';
+	prev.className = 'px-3 py-1 border rounded mr-2';
+	prev.disabled = recipientsPage <= 1;
+	prev.addEventListener('click', () => fetchRecipients(recipientsPage - 1));
+
+	const next = document.createElement('button');
+	next.textContent = 'Next';
+	next.className = 'px-3 py-1 border rounded';
+	next.disabled = recipientsPage >= totalPages;
+	next.addEventListener('click', () => fetchRecipients(recipientsPage + 1));
+
+	const info = document.createElement('div');
+	info.className = 'text-sm text-slate-500';
+	info.textContent = `Page ${recipientsPage} of ${totalPages}`;
+
+	el.appendChild(prev);
+	el.appendChild(info);
+	el.appendChild(next);
+}
+
+// Close details
+document.getElementById('closeCampaignDetails').addEventListener('click', () => {
+	document.getElementById('campaignDetailsModal').classList.add('hidden');
+});
+
+// Hook filter inside modal
+document.getElementById('applyRecipientFilters').addEventListener('click', () => fetchRecipients(1));
+
+// Toggle switch functionality
+const panelToggle = document.getElementById('panelToggle');
+const toggleBg = panelToggle.nextElementSibling;
+const dot = toggleBg.nextElementSibling;
+
+panelToggle.addEventListener('change', () => {
+  if (panelToggle.checked) {
+    // Show Logs
+    recipientsPanel.classList.add('hidden');
+    logsPanel.classList.remove('hidden');
+    toggleBg.classList.remove('bg-slate-300');
+    toggleBg.classList.add('bg-indigo-600');
+    dot.classList.add('translate-x-7');
+    fetchLogs(1);
+  } else {
+    // Show Recipients
+    logsPanel.classList.add('hidden');
+    recipientsPanel.classList.remove('hidden');
+    toggleBg.classList.remove('bg-indigo-600');
+    toggleBg.classList.add('bg-slate-300');
+    dot.classList.remove('translate-x-7');
+  }
+});
+
+
+
+// Alert helper
+function showAlert(message, type = 'info') {
+	const alertDiv = document.createElement('div');
+	alertDiv.className = `p-4 rounded-lg mb-4 ${
+		type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+		type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
+		'bg-blue-50 border border-blue-200 text-blue-800'
+	}`;
+	alertDiv.textContent = message;
+
+	alertContainer.innerHTML = '';
+	alertContainer.appendChild(alertDiv);
+
+	if (type !== 'error') {
+		setTimeout(() => alertDiv.remove(), 5000);
+	}
+}
+
+// Initial load
+window.addEventListener('DOMContentLoaded', loadCampaigns);
+
+// Delegate clicks for campaign detail buttons (works even after refresh)
+const campaignsListContainer = document.getElementById('campaignsList');
+if (campaignsListContainer) {
+  campaignsListContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.viewCampaignBtn');
+    if (btn && btn.dataset && btn.dataset.id) viewCampaignDetails(btn.dataset.id);
+  });
+}
+
+// Tab switching logic
+const tabBtnCreate = document.getElementById('tabBtnCreate');
+const tabBtnRecent = document.getElementById('tabBtnRecent');
+const createCard = document.getElementById('createCard');
+const recentCard = document.getElementById('recentCard');
+
+function switchToCreate() {
+  tabBtnCreate.classList.add('bg-indigo-600', 'text-white');
+  tabBtnCreate.classList.remove('bg-white');
+  tabBtnRecent.classList.remove('bg-indigo-600', 'text-white');
+  recentCard.classList.add('hidden');
+  createCard.classList.remove('hidden');
+}
+
+function switchToRecent() {
+  tabBtnRecent.classList.add('bg-indigo-600', 'text-white');
+  tabBtnRecent.classList.remove('bg-white');
+  tabBtnCreate.classList.remove('bg-indigo-600', 'text-white');
+  createCard.classList.add('hidden');
+  recentCard.classList.remove('hidden');
+  loadCampaigns();
+}
+
+if (tabBtnCreate) tabBtnCreate.addEventListener('click', switchToCreate);
+if (tabBtnRecent) tabBtnRecent.addEventListener('click', switchToRecent);
+
+// -------------------- Campaign Logs: fetching / edit / delete / bulk delete --------------------
+let logsPage = 1;
+let logsTotalPages = 1;
+let selectedLogIds = new Set();
+let currentEditLogId = null;
+
+function getCSRF() {
+  return document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+}
+
+async function fetchLogs(page = 1) {
+  if (!activeCampaignId) return;
+  const search = document.getElementById('logsSearch').value.trim();
+  const status = document.getElementById('logsStatusFilter').value;
+  const params = new URLSearchParams();
+  params.set('page', page);
+  params.set('page_size', 20);
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+
+  const url = `/api/campaigns/${activeCampaignId}/logs/?` + params.toString();
+  const res = await fetch(url);
+  if (!res.ok) {
+    document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="7" class="p-6 text-center text-red-600">Failed to load logs</td></tr>';
+    return;
+  }
+
+  const data = await res.json();
+  const items = data.results || data;
+  renderLogs(items);
+
+  logsPage = page;
+  logsTotalPages = data.count ? Math.ceil(data.count / 20) : 1;
+  renderLogsPagination();
+}
+
+function renderLogs(items) {
+  const tbody = document.getElementById('logsTableBody');
+  tbody.innerHTML = '';
+  if (!items || items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-500">No logs found</td></tr>';
+    return;
+  }
+
+  items.forEach(item => {
+    const row = document.createElement('tr');
+    row.className = 'border-t hover:bg-slate-50';
+
+    const rinfo = item.recipient_info || (item.recipient || null);
+    const recipientEmail = rinfo ? (rinfo.email || '') : '';
+    const status = rinfo ? (rinfo.status || '') : '';
+    const failureReason = rinfo ? (rinfo.error_message || '') : (item.message || '');
+
+    row.innerHTML = `
+      <td class="p-3"><input type="checkbox" data-id="${item.id}" class="logCheckbox" ${selectedLogIds.has(item.id) ? 'checked' : ''}></td>
+      <td class="p-3 font-mono text-xs">${item.id}</td>
+      <td class="p-3">${recipientEmail}</td>
+      <td class="p-3">${status ? `<span class="px-2 py-1 rounded text-xs ${status === 'sent' ? 'bg-green-100 text-green-800' : status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}">${status.toUpperCase()}</span>` : '—'}</td>
+      <td class="p-3">${failureReason}</td>
+      <td class="p-3">${new Date(item.created_at).toLocaleString()}</td>
+      <td class="p-3 text-right">
+        <button class="editLogBtn px-3 py-1 bg-slate-100 rounded mr-2" data-id="${item.id}">Edit</button>
+        <button class="deleteLogBtn px-3 py-1 bg-red-100 text-red-800 rounded" data-id="${item.id}">Delete</button>
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
+
+  // Attach handlers
+  document.querySelectorAll('.logCheckbox').forEach(cb => cb.addEventListener('change', onLogCheck));
+  document.querySelectorAll('.editLogBtn').forEach(b => b.addEventListener('click', onEditLogClick));
+  document.querySelectorAll('.deleteLogBtn').forEach(b => b.addEventListener('click', onDeleteLogClick));
+}
+
+function renderLogsPagination() {
+  const el = document.getElementById('logsPagination');
+  el.innerHTML = '';
+
+  const prev = document.createElement('button');
+  prev.textContent = 'Previous';
+  prev.className = 'px-3 py-1 border rounded mr-2';
+  prev.disabled = logsPage <= 1;
+  prev.addEventListener('click', () => fetchLogs(logsPage - 1));
+
+  const next = document.createElement('button');
+  next.textContent = 'Next';
+  next.className = 'px-3 py-1 border rounded';
+  next.disabled = logsPage >= logsTotalPages;
+  next.addEventListener('click', () => fetchLogs(logsPage + 1));
+
+  const info = document.createElement('div');
+  info.className = 'text-sm text-slate-500';
+  info.textContent = `Page ${logsPage} of ${logsTotalPages}`;
+
+  el.appendChild(prev);
+  el.appendChild(info);
+  el.appendChild(next);
+}
+
+function onLogCheck(e) {
+  const id = Number(e.target.dataset.id);
+  if (e.target.checked) selectedLogIds.add(id); else selectedLogIds.delete(id);
+  document.getElementById('bulkDeleteLogsBtn').disabled = selectedLogIds.size === 0;
+}
+
+function onEditLogClick(e) {
+  const id = e.target.dataset.id;
+  currentEditLogId = id;
+  // Load log details
+  fetch(`/api/campaigns/${activeCampaignId}/logs/?search=&page=1&page_size=1`)
+    .then(r => r.json())
+    .then(data => {
+      // Try to find item in page results (best-effort)
+      const items = data.results || data;
+      const found = (items || []).find(i => String(i.id) === String(id));
+      if (found) {
+        const rinfo = found.recipient_info || (found.recipient || null);
+        document.getElementById('editLogLevel').value = found.level || 'info';
+        document.getElementById('editLogMessage').value = found.message || '';
+        document.getElementById('editLogModal').classList.remove('hidden');
+      } else {
+        // fallback: fetch single log via campaign logs list until found
+        document.getElementById('editLogLevel').value = '';
+        document.getElementById('editLogMessage').value = '';
+        document.getElementById('editLogModal').classList.remove('hidden');
+      }
+    });
+}
+
+async function onDeleteLogClick(e) {
+  const id = e.target.dataset.id;
+  if (!confirm('Delete this log entry?')) return;
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': getCSRF()} });
+  if (res.ok) fetchLogs(logsPage);
+  else alert('Failed to delete');
+}
+
+// Bulk delete
+document.getElementById('bulkDeleteLogsBtn').addEventListener('click', async () => {
+  if (selectedLogIds.size === 0) return;
+  if (!confirm(`Delete ${selectedLogIds.size} log(s)?`)) return;
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/bulk_delete/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
+    body: JSON.stringify({ ids: Array.from(selectedLogIds) })
+  });
+  if (res.ok) {
+    selectedLogIds.clear();
+    document.getElementById('logsSelectAll').checked = false;
+    document.getElementById('bulkDeleteLogsBtn').disabled = true;
+    fetchLogs(logsPage);
+  } else {
+    alert('Bulk delete failed');
+  }
+});
+
+// Select all
+const logsSelectAllEl = document.getElementById('logsSelectAll');
+if (logsSelectAllEl) {
+  logsSelectAllEl.addEventListener('change', (e) => {
+    document.querySelectorAll('.logCheckbox').forEach(cb => {
+      cb.checked = e.target.checked;
+      const id = Number(cb.dataset.id);
+      if (e.target.checked) selectedLogIds.add(id); else selectedLogIds.delete(id);
+    });
+    document.getElementById('bulkDeleteLogsBtn').disabled = selectedLogIds.size === 0;
+  });
+}
+
+// Edit modal handlers
+document.getElementById('cancelEditLog').addEventListener('click', () => {
+  document.getElementById('editLogModal').classList.add('hidden');
+  currentEditLogId = null;
+});
+
+document.getElementById('saveEditLog').addEventListener('click', async () => {
+  const payload = { level: document.getElementById('editLogLevel').value, message: document.getElementById('editLogMessage').value };
+  const res = await fetch(`/api/campaigns/${activeCampaignId}/logs/${currentEditLogId}/`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) {
+    document.getElementById('editLogModal').classList.add('hidden');
+    fetchLogs(logsPage);
+  } else {
+    alert('Failed to save changes');
+  }
+});
+
+// Logs filter handlers
+document.getElementById('applyLogsFilters').addEventListener('click', () => fetchLogs(1));
+
+// Tab switching inside modal
+const tabRecipientsBtn = document.getElementById('tabRecipients');
+const tabLogsBtn = document.getElementById('tabLogs');
+const recipientsPanel = document.getElementById('recipientsPanel');
+const logsPanel = document.getElementById('logsPanel');
+
+if (tabRecipientsBtn) tabRecipientsBtn.addEventListener('click', () => { recipientsPanel.classList.remove('hidden'); logsPanel.classList.add('hidden'); });
+if (tabLogsBtn) tabLogsBtn.addEventListener('click', () => { recipientsPanel.classList.add('hidden'); logsPanel.classList.remove('hidden'); fetchLogs(1); });
+
+// Export download helpers
+async function downloadFile(url, suggestedName) {
+  try {
+    const res = await fetch(url, { headers: { 'X-CSRFToken': getCSRF() } });
+    if (!res.ok) throw new Error('Export failed');
+    const blob = await res.blob();
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = suggestedName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
+  } catch (err) {
+    alert(err.message || 'Download failed');
+  }
+}
+
+function downloadRecipientsCSV() {
+  if (!activeCampaignId) return;
+  const search = document.getElementById('recipientSearch').value.trim();
+  const status = document.getElementById('recipientStatusFilter').value;
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  const url = `/api/campaigns/${activeCampaignId}/recipients/export/?` + params.toString();
+  downloadFile(url, `campaign_${activeCampaignId}_recipients.csv`);
+}
+
+function downloadLogsCSV() {
+  if (!activeCampaignId) return;
+  const search = document.getElementById('logsSearch').value.trim();
+  const status = document.getElementById('logsStatusFilter').value;
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  const url = `/api/campaigns/${activeCampaignId}/logs/export/?` + params.toString();
+  downloadFile(url, `campaign_${activeCampaignId}_logs.csv`);
+}
+
+// Attach export button listeners
+const exportRecipientsBtn = document.getElementById('exportRecipientsCSV');
+if (exportRecipientsBtn) exportRecipientsBtn.addEventListener('click', () => downloadRecipientsCSV());
+const exportLogsBtn = document.getElementById('exportLogsCSV');
+if (exportLogsBtn) exportLogsBtn.addEventListener('click', () => downloadLogsCSV());
+</script>
+
+</body>
+</html>
