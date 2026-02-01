@@ -48,9 +48,7 @@ class VerificationJob(models.Model):
 
 
 class EmailResult(models.Model):
-    """
-    Stores individual email verification results
-    """
+    """ Stores individual email verification results """
     STATUS_CHOICES = [
         ('valid', 'Valid'),
         ('invalid', 'Invalid'),
@@ -62,25 +60,27 @@ class EmailResult(models.Model):
     id = models.AutoField(primary_key=True)
     job = models.ForeignKey(VerificationJob, on_delete=models.CASCADE, related_name='results')
     email = models.EmailField(max_length=255)
+    
+    # Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unknown')
     
-    # Verification Details
+    # 1-5 Standard Checks
     syntax_valid = models.BooleanField(default=False)
     domain_exists = models.BooleanField(default=False)
     mx_records_found = models.BooleanField(default=False)
-    smtp_valid = models.BooleanField(default=False)
     is_disposable = models.BooleanField(default=False)
-    is_catch_all = models.BooleanField(default=False)
     
-    # Additional Info
+    # 6. Professional Enrichment (NEW)
+    is_role_account = models.BooleanField(default=False)
+    is_free_email = models.BooleanField(default=False)
+    has_dns_security = models.BooleanField(default=False) # SPF/DMARC
+    
+    # Metadata
     reason = models.TextField(blank=True, null=True)
     mx_records = models.JSONField(default=list, blank=True)
     domain = models.CharField(max_length=255, blank=True, null=True)
     normalized_email = models.EmailField(max_length=255, blank=True, null=True)
-    
-    # Metadata
     verified_at = models.DateTimeField(auto_now_add=True)
-    verification_time_ms = models.IntegerField(default=0)  # Time taken in milliseconds
     
     class Meta:
         ordering = ['id']
