@@ -1,62 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  {% load static %}
-  <title>Login | EmailVerify Pro</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-  <link rel="stylesheet" href="{% static 'css/login.css' %}">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% load static %}
+    <title>Login | EmailVerify Pro</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="{% static 'css/login.css' %}" />
+  </head>
+  <body>
+    <div class="login-wrapper">
+      <div class="login-left">
+        <img
+          src="{% static 'register.jpg' %}"
+          alt="Register Illustration"
+          class="login-illustration"
+        />
+      </div>
 
-  <div class="login-wrapper">
+      <div class="login-right">
+        <h3>Login to your account</h3>
 
-    <div class="login-left">
-      <img src="{% static 'register.jpg' %}" alt="Register Illustration" class="login-illustration">
+        <form method="POST" action="{% url 'login' %}">
+          {% csrf_token %} {% if messages %}
+          <div style="color: red; margin-bottom: 10px; font-size: 0.9em">
+            {% for message in messages %} {{ message }} {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="input-group">
+            <label>Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+
+          <div class="input-group">
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <div class="login-options">
+            <label> <input type="checkbox" /> Remember me </label>
+            <a href="#">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="login-btn">Login</button>
+
+          <p class="signup-text">
+            Don’t have an account?
+            <a href="{% url 'signup' %}">Create one</a>
+          </p>
+        </form>
+      </div>
     </div>
-
-    <div class="login-right">
-      <h3>Login to your account</h3>
-
-      <form method="POST" action="{% url 'login' %}">
-        {% csrf_token %}
-
-        {% if messages %}
-            <div style="color: red; margin-bottom: 10px; font-size: 0.9em;">
-                {% for message in messages %}
-                    {{ message }}
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <div class="input-group">
-          <label>Email</label>
-          <input type="email" name="email" placeholder="Enter your email" required>
-        </div>
-
-        <div class="input-group">
-          <label>Password</label>
-          <input type="password" name="password" placeholder="Enter your password" required>
-        </div>
-
-        <div class="login-options">
-          <label>
-            <input type="checkbox"> Remember me
-          </label>
-          <a href="#">Forgot password?</a>
-        </div>
-
-        <button type="submit" class="login-btn">Login</button>
-
-        <p class="signup-text">
-          Don’t have an account?
-          <a href="{% url 'signup' %}">Create one</a>
-        </p>
-      </form>
-    </div>
-
-  </div>
-
-</body>
+  </body>
 </html>
