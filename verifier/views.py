@@ -600,7 +600,27 @@ def admin_dashboard(request):
     })
 
 def admin_login(request):
-    if request.method == "POST": return redirect('admin_dashboard')
+    # 1. If already logged in as admin, go to dashboard
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('admin_dashboard')
+
+    if request.method == "POST":
+        # 2. Get 'username' from the form (matches name="username" in HTML)
+        username = request.POST.get('username') 
+        password = request.POST.get('password')
+        
+        # 3. Authenticate
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            if user.is_staff:
+                auth_login(request, user)
+                return redirect('admin_dashboard')
+            else:
+                messages.error(request, "Access denied. You do not have admin permissions.")
+        else:
+            messages.error(request, "Invalid credentials.")
+            
     return render(request, 'admin_login.html')
 
 
