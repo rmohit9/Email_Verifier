@@ -11,14 +11,48 @@ body {
 }
 
 /* NAVBAR */
-.navbar {
+/* .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 20px 80px;
     background: #ffffff;
+} */
+
+.navbar {
+    position: fixed; /* Keep it at the top while scrolling */
+    top: 20px;       /* Spacing from the very top of the screen */
+    left: 50%;
+    transform: translateX(-50%); /* Centers the capsule perfectly */
+    width: 90%;      /* Capsule width relative to screen */
+    max-width: 1200px;
+    z-index: 1000;
+    
+    /* Capsule Shape & Glassmorphism */
+    background: rgba(255, 255, 255, 0.8); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 100px; /* High radius for the capsule look */
+    
+    /* Elegant Shadow */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 10px 30px;
+    transition: all 0.4s ease;
 }
 
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.navbar:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    top: 15px; /* Slight lift up */
+}
 
 
 .logo {
@@ -64,31 +98,31 @@ nav a:hover {
     gap: 12px;
 }
 
-.login-btn {
+/* .login-btn {
     background: white;
     border: 1px solid #e2e8f0;
     padding: 8px 16px;
     border-radius: 20px;
     cursor: pointer;
-}
+} */
 
-.primary-btn {
+/* .primary-btn {
     background: #4f46e5;
     color: white;
     border: none;
     padding: 10px 18px;
     border-radius: 20px;
     cursor: pointer;
-}
+} */
 
-.primary-btn:hover {
+/* .primary-btn:hover {
     background: #4338ca;
-}
+} */
 
-.login-btn,
+/* .login-btn,
 .primary-btn {
   text-decoration: none !important;
-}
+} */
 
 /* hide hamburger on desktop */
 .hamburger {
@@ -97,6 +131,79 @@ nav a:hover {
   display: none; 
   margin-left: auto;   /* pushes hamburger to right */
   padding-right: 4px;  /* tiny spacing from edge */
+
+}
+
+/* --- HAMBURGER VISIBILITY FIX --- */
+.hamburger {
+    display: none; /* Hidden on desktop */
+    flex-direction: column;
+    gap: 4px; /* Space between bars */
+    cursor: pointer;
+    padding: 5px;
+    z-index: 1001;
+}
+
+.bar {
+    width: 24px;
+    height: 3px;
+    background-color: #020617; /* Dark color to be visible on white capsule */
+    border-radius: 2px;
+    transition: 0.3s;
+}
+
+/* --- IMPROVED WHEAT DROPDOWN UI --- */
+/* --- IMPROVED WHEAT DROPDOWN UI --- */
+.mobile-dropdown {
+    display: none; 
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 10px); /* Align exactly below the capsule */
+    left: 0;                /* Align to the left edge of the capsule */
+    width: 100%;            /* Make it the same width as the capsule */
+    background: wheat; 
+    padding: 20px;
+    border-radius: 24px;    /* Matches capsule curve */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+}
+
+.mobile-dropdown.active {
+    display: flex;
+}
+
+
+.mobile-dropdown a {
+    color: wheat; 
+    text-decoration: none;
+    font-weight: 600;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.mobile-dropdown a:last-of-type {
+    border-bottom: none;
+}
+
+.mobile-cta {
+    background: #4f46e5;
+    color: white !important;
+    border-radius: 50px;
+    margin-top: 10px;
+}
+
+/* Ensure hamburger shows on mobile */
+@media (max-width: 992px) {
+    .hamburger {
+        display: flex;
+
+    }
+    .navbar {
+        padding: 10px 20px; /* Reduces padding so it fits small screens */
+        width: 95%;         /* Gives slightly more room on mobile */
+    }
 }
 
 
@@ -135,61 +242,291 @@ nav a:hover {
   }
 }
 
+
+
 /* limit page width on large desktops */
+/* .container {
+  max-width: 1280px;   
+  margin: 0 auto;      
+  padding: 0 20px;     
+} */
+
+/* Update this section in your home.css */
 .container {
-  max-width: 1280px;   /* looks great on big monitors */
-  margin: 0 auto;      /* centers page */
-  padding: 0 20px;     /* prevents edge touching */
+    width: 100%;
+    max-width: 100%; /* Change from 1280px to 100% */
+    margin: 0;       /* Remove centering margin */
+    padding: 0;      /* Remove side padding to touch the edges */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    /* background-color: rgb(243, 231, 210); */
+     /* background-color: #020617;  */
+    /* background-color: #F1E3D3; */
 }
 
+/* Ensure the hero and other sections have internal padding 
+   so content doesn't touch the very edge of the screen */
+.hero, .technology, .benefits, .stats {
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+/* Stacks the Header on top of the Content */
+.benefits {
+    display: flex;
+    flex-direction: column; 
+    padding: 80px 10%;
+    background: #f9fafc;
+    gap: 50px;
+}
+
+/* Centers only the text at the top */
+.benefits-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto; /* Centers the block itself */
+}
+
+.benefits-header h2 {
+    font-size: 36px;
+    margin-bottom: 15px;
+    /* color: #0f172a; */
+    color: wheat;
+}
+
+.benefits-subtext {
+    color: #64748b;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* Handles the side-by-side layout for the items below the header */
+.benefits-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 60px;
+    width: 100%;
+}
+
+.benefits-left, .benefits-right {
+    width: 50%; /* Maintains original proportions */
+}
+
+/* Responsive adjustment for mobile */
+@media (max-width: 992px) {
+    .benefits-body {
+        flex-direction: column;
+        align-items: center;
+    }
+    .benefits-left, .benefits-right {
+        width: 100%;
+    }
+}
 
 /* HERO SECTION */
 .hero {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 80px;
+    /* justify-content: space-between; */
+    /* padding: 80px; */
+    /*padding: 100px 5%; Increased vertical padding */
+    /* gap: 40px; */
+     /* background-color: #020617;  */
+    /* background-color: rgb(18, 1, 1); */
+    min-height: 100vh;
+    padding: 0 8%; 
+    gap: 40px;
+    background-color: #020617;
+    box-sizing: border-box;
+    padding-top: 120px;
+    /* flex-direction: column; */
+    justify-content: center;
+}
+
+.hero-stats-row {
+    display: flex;
+    gap: 20px;
+    /* margin-top: 50px; */
+    padding-top: 30px;
+    /* border-top: 1px solid rgba(255, 255, 255, 0.1); */
+}
+
+.h-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    transition: 0.3s ease;
+}
+
+.h-stat:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: #818cf8;
+}
+
+.h-icon {
+    width: 24px;
+    height: 24px;
+    color: wheat;
+}
+
+.h-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.h-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.h-value small {
+    color: wheat;
+    font-size: 1rem;
+    margin-left: 2px;
+}
+
+/* Ensure the mobile dropdown is hidden by default and styled nicely */
+.mobile-dropdown {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    position: absolute;
+    top: 70px; /* Positioned just below the capsule bar */
+    left: 0;
+    width: 100%;
+    background: rgba(2, 6, 23, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 999;
+}
+
+/* This class will be added via JavaScript */
+.mobile-dropdown.active {
+    display: flex;
+}
+
+@media (max-width: 992px) {
+    
+    .nav-links.desktop-only, 
+    .nav-actions.desktop-only {
+        display: none;
+    }
+    
+    .hamburger {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+    }
+}
+
+@media (max-width: 1024px) {
+    .hero {
+        flex-direction: column;
+        padding: 120px 5% 60px;
+        text-align: center;
+    }
+    
+    .hero-stats-row {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-stats-row {
+        flex-direction: column; /* Stacks cards on mobile */
+        align-items: center;
+        width: 100%;
+    }
+
+    .hero {
+        /* Increase the first value (top padding) to clear the fixed navbar */
+        padding: 140px 20px 50px; 
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero h1 {
+        /* Ensure the heading isn't too large for small screens */
+        font-size: 2.2rem;
+        line-height: 1.2;
+        margin-top: 10px;
+    }
+
+    .h-stat {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem;
+    }
 }
 
 .hero-left {
     width: 50%;
 }
 
-.hero-left h1 {
+/* .hero-left h1 {
     font-size: 52px;
     line-height: 1.1;
     margin-bottom: 20px;
+    color: wheat;
+} */
+
+.hero-left h1 {
+    font-size: 4.5rem; /* Significant increase for "Professional Email..." */
+    line-height: 1.1;
+    margin-bottom: 24px;
+    /* color: #ffffff; */
+    color: wheat;
 }
 
 .hero-left p {
-    font-size: 18px;
-    color: #475569;
+    font-size: 16px;
+    /* color: #475569; */
     margin-bottom: 30px;
     max-width: 520px;
+    color: white;
 }
 
 .hero-buttons {
-    display: flex;
+     display: flex;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 20px; 
+    font-size: 1.3rem;
+    
 }
 
-.secondary-btn {
+
+
+/* .secondary-btn {
     background: white;
     border: 2px solid #22c55e;
     color: #22c55e;
     padding: 10px 18px;
     border-radius: 20px;
     cursor: pointer;
-}
+} */
 
 .note {
-    color: #16a34a;
+    color: #818cf8;
     font-size: 14px;
 }
 
 /* RIGHT MOCKUP */
-.hero-right {
+/* .hero-right {
     width: 45%;
     display: flex;
     justify-content: center;
@@ -203,6 +540,70 @@ nav a:hover {
     padding: 25px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.08);
     position: relative;
+} */
+
+/* --- Hero Right Container --- */
+.hero-right {
+    width: 45%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px; /* Adds depth for the float effect */
+}
+
+/* --- Floating Gmail Wrapper --- */
+.floating-hero-icon {
+    position: relative;
+    /* width: 250px; 
+    height: 250px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: heroFloat 4s ease-in-out infinite;
+    /* max-width: 600px;  */
+    width: 350px;
+    height: 350px;
+}
+
+.gmail-hero-logo {
+    width: 100%;
+    height: auto;
+    z-index: 2;
+    /* Soft drop shadow to make it pop against the dark background */
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.5));    
+}
+
+/* --- Indigo Glow Effect behind the logo --- */
+.icon-glow {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+    filter: blur(40px);
+}
+
+/* --- Smooth Floating Animation --- */
+@keyframes heroFloat {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-25px) rotate(2deg); /* Moves up and tilts slightly */
+    }
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+/* --- Mobile Fix --- */
+@media (max-width: 768px) {
+    .floating-hero-icon {
+        width: 150px;
+        height: 150px;
+        margin-top: 40px;
+    }
 }
 
 .row {
@@ -242,33 +643,309 @@ nav a:hover {
 }
 
 /* STATS SECTION */
-.stats {
+/* .stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
     max-width: 900px;
     margin: 0 auto;
     padding: 0 20px 60px;
+} */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto 100px;
+    /* padding: 0 20px; */
+    padding: 0 5%;
+    padding-top: 80px;
 }
+
+
+
 
 /* CARD */
 /* STATS CONTAINER */
-.stats {
+/* .stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 28px;
     max-width: 950px;
     margin: 0 auto 80px;
     padding: 0 20px;
-}
+} */
 
 /* CARD */
-.stat-card {
+/* .stat-card {
     background: #ffffff;
     padding: 26px 28px;
     border-radius: 18px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+} */
+
+/* .stat-card {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 24px;
+    
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 8px rgba(0, 0, 0, 0.02);
+    border: 1px solid #f1f5f9;
+    transition: transform 0.3s ease;
+} */
+
+/* .stat-card {
+    background: #ffffff;
+    padding: 50px 40px; 
+    border-radius: 28px; 
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05); 
+    border: 1px solid #f1f5f9;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+} */
+
+
+.stats-container {
+    background-color: #020617; /* Matches your hero */
+    padding: 60px 5%;
+    display: flex;
+    justify-content: center;
 }
+
+.stats-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: space-between;
+}
+
+.stat-card {
+    flex: 1;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateY(-5px);
+}
+
+.stat-icon-box {
+    width: 48px;
+    height: 48px;
+    color: #818cf8; /* Modern Indigo */
+    background: rgba(129, 140, 248, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.stat-icon-box svg {
+    width: 100%;
+    height: 100%;
+}
+
+.stat-label {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.stat-number {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+}
+
+.suffix {
+    color: #818cf8; /* Highlight the plus/percent sign */
+    margin-left: 2px;
+}
+
+.stat-unit {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 400;
+    margin-left: 5px;
+}
+
+
+.stats-container {
+    background-color: #020617; /* Matches your hero */
+    padding: 60px 5%;
+    display: flex;
+    justify-content: center;
+}
+
+.stats-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: space-between;
+}
+
+.stat-card {
+    flex: 1;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateY(-5px);
+}
+
+.stat-icon-box {
+    width: 48px;
+    height: 48px;
+    color: #818cf8; /* Modern Indigo */
+    background: rgba(129, 140, 248, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.stat-icon-box svg {
+    width: 100%;
+    height: 100%;
+}
+
+.stat-label {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.stat-number {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+}
+
+.suffix {
+    color: #818cf8; /* Highlight the plus/percent sign */
+    margin-left: 2px;
+}
+
+.stat-unit {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 400;
+    margin-left: 5px;
+}
+/* .stat-card {
+    background: #ffffff;
+    padding: 50px 40px; 
+    border-radius: 28px;
+    border: 1px solid yellowgreen;
+    
+  
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+} */
+
+.stat-card:hover {
+    /* Lift the card up */
+    transform: translateY(-15px);
+    
+    /* Apply the brand indigo border */
+    border-color: #020617;
+    
+    /* Apply the attractive indigo glow shadow */
+    box-shadow: 0 20px 40px rgba(79, 70, 229, 0.12);
+}
+
+/* Optional: Subtle interaction for the icon inside the stat card */
+.stat-card:hover .stat-icon {
+    background: #020617;
+    color: #ffffff;
+    transform: scale(1.1);
+    transition: all 0.4s ease;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: #eef2ff;
+    color: #4f46e5;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 20px;
+    transition: all 0.4s ease;
+}
+
+.stat-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 48px; /* Enlarged for better visual impact */
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.stat-value span {
+    font-size: 16px;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-left: 5px;
+}
+
+/* .stat-value {
+    font-size: 48px;     
+    font-weight: 800;
+    margin-top: 15px;
+} */
 
 /* TOP ROW (ICON + TITLE) */
 .stat-top {
@@ -278,7 +955,7 @@ nav a:hover {
     margin-bottom: 16px;
 }
 
-.stat-icon {
+/* .stat-icon {
     width: 42px;
     height: 42px;
     background: #eef2ff;
@@ -288,40 +965,46 @@ nav a:hover {
     align-items: center;
     justify-content: center;
     font-size: 18px;
-}
+} */
 
-.stat-title {
+/* .stat-title {
     font-size: 15px;
     font-weight: 600;
     color: #334155;
-}
+} */
 
 /* VALUE */
-.stat-value {
+/* .stat-value {
     font-size: 36px;
     font-weight: 800;
     color: #020617;
-}
+} */
 
-.stat-value span {
+/* .stat-value span {
     font-size: 14px;
     font-weight: 500;
     color: #64748b;
     margin-left: 4px;
-}
+} */
 
 
 /* TECHNOLOGY SECTION */
 .technology {
-    padding: 80px;
+    padding: 40px; 
     text-align: center;
-    background: #f9fafc;
+    /* background: #f9fafc; */
+     /* background-color: rgb(241, 241, 158);  */
+      background: #0f172a; 
+     /* background: #010a27; */
+     min-height: 90vh;
+     padding-top: 80px;
+    
 }
 
 .tech-badge {
     display: inline-block;
     background: #eef2ff;
-    color: #4f46e5;
+    /* color: #4f46e5; */
     font-size: 12px;
     font-weight: 600;
     padding: 6px 14px;
@@ -332,21 +1015,26 @@ nav a:hover {
 .technology h2 {
     font-size: 36px;
     margin-bottom: 12px;
-    color: #0f172a;
+    /* color: #0f172a; */
+    color: wheat;
 }
 
+
+
+
 .tech-subtext {
-    color: #64748b;
+    /* color: #64748b; */
+    color: white;
     font-size: 16px;
     max-width: 600px;
     margin: 0 auto 50px;
 }
 
-.tech-cards {
+/* .tech-cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
-    max-width: 1100px;   /* 👈 IMPORTANT: controls card width */
+    max-width: 1100px;   
     margin: 0 auto;
 }
 
@@ -357,11 +1045,103 @@ nav a:hover {
     border-radius: 14px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
     text-align: left;
+} */
+
+/* Update this for your Technology and Benefits icons */
+.tech-icon-wrapper, .b-icon-box {
+    width: 45px;          /* Shrinks the container size */
+    height: 45px;
+    display: flex;
+    align-items: center;  /* Vertical centering */
+    justify-content: center; /* Horizontal centering */
+    margin: 0 auto 20px;  /* 'auto' centers the box itself if the parent is centered */
+    /* background: rgba(129, 140, 248, 0.1); */
+    background-color: #444;
+    border-radius: 12px;
+    padding: 10px;        /* Spacing between the box edge and the icon */
+    flex-shrink: 0;
+}
+
+/* This specifically targets the SVG icon inside the wrapper */
+.tech-icon-wrapper svg, .b-icon-box svg {
+    width: 24px;          /* Forces the icon to a professional small size */
+    height: 24px;
+    stroke-width: 2px;    /* Keeps the lines crisp */
+    color: wheat;       /* Ensures matching indigo color */
+}
+
+/* Container adjusted for a single line of 4 cards */
+.tech-cards {
+    display: grid;
+    /* Forces exactly 4 columns on desktop */
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 30px;
+    max-width: 1400px; /* Increased to allow cards to be wider */
+    margin: 50px auto 0;
+    padding: 0 20px;
+}
+
+.tech-card {
+    padding: 60px 30px; /* Deep padding for a luxury feel */
+    border-radius: 28px;
+    /* background: #ffffff; */
+     /* background-color: rgb(243, 192, 98);  */
+     background-color: #020617;
+    /* background-color: #020617; */
+    border: 1px solid #0f172a;
+    text-align: center; /* Center content for a cleaner linear look */
+    
+    /* Smooth transition for all properties */
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+}
+
+/* --- ATTRACTIVE HOVER EFFECT --- */
+.tech-card:hover {
+    transform: translateY(-15px); /* Card lifts up */
+    border-color: #818cf8; /* Border changes to your brand Indigo */
+    box-shadow: 0 20px 40px rgba(79, 70, 229, 0.15); /* Deep Indigo glow */
+}
+
+/* Optional: Add a subtle glow behind the icon on hover */
+.tech-card:hover .tech-icon {
+    background: #020617;
+    color: #ffffff;
+    transform: rotateY(360deg);
+    transition: all 0.6s;
+}
+
+/* Ensures icons stay centered in the bigger cards */
+.tech-icon {
+    margin: 0 auto 20px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: #eef2ff;
+    color: #020617;
+}
+@media (max-width: 1100px) {
+    .tech-cards {
+        /* Drops to 2 per line on tablets */
+        grid-template-columns: repeat(2, 1fr); 
+    }
+}
+
+@media (max-width: 600px) {
+    .tech-cards {
+        /* 1 per line on mobile */
+        grid-template-columns: 1fr; 
+    }
 }
 
 
 
-.tech-icon {
+/* .tech-icon {
     width: 36px;
     height: 36px;
     background: #eef2ff;
@@ -372,7 +1152,7 @@ nav a:hover {
     justify-content: center;
     margin-bottom: 14px;
     font-size: 16px;
-}
+} */
 
 
 .tech-card h3 {
@@ -384,7 +1164,7 @@ nav a:hover {
 
 .tech-card p {
     font-size: 13px;
-    color: #64748b;
+    color: wheat;
     line-height: 1.5;
 }
 
@@ -393,7 +1173,8 @@ nav a:hover {
     display: flex;
     gap: 60px;
     padding: 80px;
-    background: #f9fafc;
+    /* background: #f9fafc; */
+    background-color: #020617;
 }
 
 .benefits-left {
@@ -406,34 +1187,36 @@ nav a:hover {
 }
 
 .benefits-subtext {
-    color: #64748b;
+    /* color: #64748b; */
+    color: white;
     margin-bottom: 30px;
-    max-width: 480px;
+    /* max-width: 480px; */
 }
 
-.benefit-item {
+/* .benefit-item {
     display: flex;
     gap: 14px;
-    background: white;
-    padding: 18px 20px;
+    background: rgb(252, 234, 201);
+    padding: 28px 30px;
     border-radius: 14px;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-}
+    align-items: center;
+} */
 
-.benefit-icon {
+/* .benefit-icon {
     font-size: 20px;
-}
+} */
 
-.benefit-item h4 {
+/* .benefit-item h4 {
     font-size: 16px;
     margin-bottom: 4px;
-}
+} */
 
-.benefit-item p {
+/* .benefit-item p {
     font-size: 14px;
     color: #64748b;
-}
+} */
 
 /* RIGHT CARD */
 .benefits-right {
@@ -441,7 +1224,8 @@ nav a:hover {
 }
 
 .results-card {
-    background: white;
+    /* background: white; */
+     background: rgb(252, 234, 201);
     padding: 24px;
     border-radius: 16px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.08);
@@ -491,7 +1275,7 @@ nav a:hover {
     color: #64748b;
 }
 
-.download-btn {
+/* .download-btn {
     width: 100%;
     padding: 12px;
     border-radius: 20px;
@@ -500,10 +1284,12 @@ nav a:hover {
     color: white;
     font-weight: 600;
     cursor: pointer;
-}
+} */
 
 .download-btn:hover {
-    background: #020617;
+    /* background: #020617; */
+    background-color: black;
+    color: white
 }
 /* FINAL CTA FIX */
 .cta-divider {
@@ -514,27 +1300,45 @@ nav a:hover {
 
 
 .final-cta {
-    min-height: 70vh;
-    padding-top: 50px;        /* small space from divider */
+    /* min-height: 70vh; */
+    min-height: 15vh;
+    padding-top: 50px;        
     padding: 60px 20px 40px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;   /* 🔥 KEY CHANGE */
+    justify-content: flex-start;   
     align-items: center;
-    background: #fafafa;
+    /* background: #fafafa; */
     text-align: center;
+    background: #0f172a;
+    margin-bottom: 25px;
 }
+
+/* .final-cta .cta-btn {
+    background: #ffffff;
+    color: #4f46e5;
+    border: none;
+} */
+
+/* .final-cta .cta-btn:hover {
+    background: #f8fafc;
+    transform: translateY(-2px);
+} */
 
 
 .final-cta h2 {
     font-size: 40px;
     font-weight: 700;
     margin-bottom: 35px;
-    color: #0f172a;
+    /* color: #0f172a; */
+    color: wheat;
 }
 
+
+
+
 /* BUTTON FIX */
-.cta-btn {
+/* .cta-btn {
     background: #4f46e5;
     color: #ffffff;
     border: none;
@@ -545,16 +1349,136 @@ nav a:hover {
     cursor: pointer;
     box-shadow: 0 25px 60px rgba(79, 70, 229, 0.45);
     transition: all 0.3s ease;
-}
+} */
 
-.cta-btn:hover {
+/* .cta-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 35px 70px rgba(79, 70, 229, 0.55);
+} */
+
+/* Shared Button Animation Logic with Original Dimensions */
+.login-btn, .primary-btn, .secondary-btn, .download-btn, .cta-btn {
+    outline: none;
+    cursor: pointer;
+    border: none;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: all 0.4s;
+    text-decoration: none !important;
+    z-index: 1;
+    
+    /* RESTORED ORIGINAL DIMENSIONS */
+    font-family: "Segoe UI", sans-serif;
+    font-weight: 600;
 }
+
+.login-btn span, .primary-btn span, .secondary-btn span, .download-btn span, .cta-btn span {
+    position: relative;
+    z-index: 10;
+    transition: color 0.4s;
+}
+
+/* The Sliding Layer */
+.login-btn::before, .primary-btn::before, .secondary-btn::before, .download-btn::before, .cta-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -15%; /* Slightly more offset for cleaner entry */
+    width: 135%;
+    height: 100%;
+    z-index: 0;
+    transform: skew(30deg);
+    transition: transform 0.5s cubic-bezier(0.3, 1, 0.8, 1);
+}
+
+.login-btn:hover::before, .primary-btn:hover::before, .secondary-btn:hover::before, .download-btn:hover::before, .cta-btn:hover::before {
+    transform: translate3d(115%, 0, 0);
+}
+
+/* Specific Button Styles with Original Dimensions Applied */
+
+/* 1. Primary Indigo (Navbar/Hero) */
+.primary-btn {
+    /* background: #1e293b;  */
+    background-color: black;
+    color: black;
+    /* Dimensions from commented code */
+    padding: 10px 18px;
+    border-radius: 20px;
+}
+.primary-btn::before {
+    /* background: #4f46e5; */
+    /* background-color: rgba(248, 248, 113, 0.905); */
+    background-color: wheat;
+}
+.primary-btn:hover span { color: white; }
+
+/* 2. Login Button */
+.login-btn {
+    /* background: #4f46e5; */
+    background: #1e293b;
+    border: 1px solid #e2e8f0;
+    /* Dimensions from commented code */
+    padding: 8px 16px;
+    border-radius: 20px;
+}
+.login-btn::before {
+    background: white;
+}
+.login-btn span { color: #334155; }
+.login-btn:hover span { color: white; }
+
+/* 3. Secondary Green (View Dashboard) */
+.secondary-btn {
+    background: #818cf8;
+    border: 2px solid #818cf8;
+    /* Dimensions from commented code */
+    padding: 10px 18px;
+    border-radius: 20px;
+    color: #818cf8;
+}
+.secondary-btn::before {
+    background: white;
+}
+.secondary-btn span { color:#818cf8; }
+.secondary-btn:hover span { color: white; }
+
+/* 4. Final CTA Button (Large) */
+.cta-btn {
+    background: yellowgreen;
+    /* Dimensions from original cta-btn code */
+    padding: 18px 44px;
+    border-radius: 999px;
+    font-size: 17px;
+    /* box-shadow: 0 25px 60px rgba(79, 70, 229, 0.45); */
+}
+.cta-btn::before {
+    /* background:  rgba(248, 248, 113, 0.905); */
+    background-color: wheat;
+}
+.cta-btn span { color: black; }
+.cta-btn:hover span { color: black; }
+
+/* 5. Download Button (Full Width variant) */
+.download-btn {
+    background: #020617;
+    /* Dimensions from commented code */
+    width: 100%;
+    padding: 12px;
+    border-radius: 20px;
+}
+.download-btn::before {
+    /* background: rgba(248, 248, 113, 0.905); */
+    background-color: wheat;
+}
+.download-btn span { color: black; }
 
 /* FOOTER */
 .app-footer {
-  background: #ffffff;
+  background: white;
   padding: 60px 80px 30px;
   border-top: 1px solid #e5e7eb;
   color: #000;
@@ -582,6 +1506,93 @@ nav a:hover {
   font-size: 14px;
   color: #444;
   line-height: 1.6;
+}
+
+/* Container Background to match your section logic */
+.benefits {
+    background-color: #020617; /* Dark theme background */
+    padding: 80px 10%;
+    color: white;
+}
+
+.benefits-header h2 {
+    color: wheat; /* Match your hero title color */
+}
+
+/* Benefit Items Styling */
+.benefit-item {
+    background: rgba(255, 255, 255, 0.03); /* Very subtle dark transparent */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 22px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 17px;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    cursor: default;
+}
+
+/* --- THE HOVER EFFECT --- */
+.benefit-item:hover {
+    transform: translateX(10px); /* Smooth slide to the right */
+    background: rgba(255, 255, 255, 0.07);
+    border-color: #818cf8; /* Indigo border on hover */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.b-icon-box {
+    width: 48px;
+    height: 48px;
+    color: #818cf8;
+    background: rgba(129, 140, 248, 0.1);
+    border-radius: 12px;
+    padding: 10px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.b-icon-box svg {
+    width: 24px;
+    height: 24px;
+    display: block;      /* Removes the "inline" baseline gap at the bottom */
+}
+
+.benefit-item:hover .b-icon-box {
+    transform: scale(1.1) rotate(-5deg); /* Icon pop effect */
+}
+
+.benefit-item h4 {
+    margin-bottom: 4px;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.benefit-item p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+/* Verification Results Card (Right Side) */
+.results-card {
+    background: #0f172a; /* Deep card color */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    transition: transform 0.4s ease;
+}
+
+.results-card:hover {
+    transform: translateY(-5px);
+     border-color: #818cf8;
+}
+
+.results-list li {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
 }
 
 /* Social Icons */
