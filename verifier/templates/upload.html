@@ -1,161 +1,238 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en" class="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {% load static %}
-    <title>VerifEye – Upload Email List</title>
+<html lang="en">
 
-    <!-- Fonts -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;600;700;800&family=Noto+Sans:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Email List | VerifEye</title>
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/upload.css' %}">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/upload.css' %}" />
-  </head>
+  <style>
+    body {
+      background: radial-gradient(circle at top,
+          #020617 0%,
+          #020617 40%,
+          #0f172a 100%);
+    }
 
-  <body class="bg-slate-50 font-display text-slate-700">
-    <!-- NAVBAR -->
-    <header class="navbar">
-      <div class="logo">
-        <img
-          src="{% static 'bg removed.png' %}"
-          alt="EmailVerify Pro Logo"
-          class="logo-img"
-        />
-      </div>
+    .uiverse-btn {
+      outline: none;
+      cursor: pointer;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      margin: 0;
+      font-family: inherit;
+      font-size: 14px;
+      position: relative;
+      display: inline-block;
+      letter-spacing: 0.05rem;
+      font-weight: 700;
+      border-radius: 500px;
+      overflow: hidden;
+      background: #66ff66;
+      color: ghostwhite;
+      transition: all 0.3s ease;
+    }
 
-      <nav>
-        <a href="{% url 'home' %}">Home</a>
-        <a href="{% url 'verification_results' %}">Results</a>
-        <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
-      </nav>
+    .uiverse-btn span {
+      position: relative;
+      z-index: 10;
+      transition: color 0.4s;
+    }
 
-      <div class="nav-buttons">
-        <a href="{% url 'login' %}" class="login-btn">Login</a>
-        <a href="{% url 'signup' %}" class="primary-btn">Get Started</a>
-      </div>
-    </header>
+    .uiverse-btn:hover span {
+      color: black;
+    }
 
-    <!-- MAIN -->
-    <main class="max-w-4xl mx-auto px-6 py-10">
-      <!-- TITLE -->
-      <div class="mb-10">
-        <h2 class="text-4xl font-extrabold text-slate-900 mb-2">
-          Upload Email List
-        </h2>
-        <p class="text-slate-500 text-lg">
-          Import your customer data to begin the cleaning process. CSV and TXT
-          supported.
-        </p>
-      </div>
+    .uiverse-btn::before,
+    .uiverse-btn::after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
 
-      <!-- CARD -->
-      <section class="card">
-        <!-- TABS -->
-        <div class="tabs">
-          <button class="tab active" id="uploadTab">
-            <span class="material-symbols-outlined">upload_file</span>
-            Upload File
-          </button>
-          <button class="tab" id="pasteTab">
-            <span class="material-symbols-outlined">edit_note</span>
-            Paste Emails
-          </button>
-        </div>
+    .uiverse-btn::before {
+      content: "";
+      background: #000;
+      width: 120%;
+      left: -10%;
+      transform: skew(30deg);
+      transition: transform 0.4s cubic-bezier(0.3, 1, 0.8, 1);
+    }
 
-        <!-- BODY -->
-        <div class="p-8">
-          <!-- UPLOAD SECTION -->
-          <div id="uploadSection">
-            <label class="upload-box">
-              <input type="file" id="fileInput" hidden accept=".csv,.txt" />
-              <div class="upload-content">
-                <div class="upload-icon">
-                  <span class="material-symbols-outlined">cloud_upload</span>
-                </div>
-                <p class="upload-title">Click to upload or drag and drop</p>
-                <p class="upload-sub">CSV or TXT (max. 50MB)</p>
-              </div>
-            </label>
+    .uiverse-btn:hover::before {
+      transform: translate3d(100%, 0, 0);
+    }
 
-            <div id="fileInfo" class="hidden mt-6">
-              <div class="file-row">
-                <div class="file-left">
-                  <span class="material-symbols-outlined text-indigo-600">
-                    description
-                  </span>
-                  <div>
-                    <p id="fileName" class="file-name"></p>
-                    <p id="fileMeta" class="file-meta"></p>
-                  </div>
-                </div>
-                <button id="removeFile">
-                  <span class="material-symbols-outlined">delete</span>
-                </button>
-              </div>
+    form .uiverse-btn {
+      display: inline-block;
+      position: relative;
+      overflow: hidden;
+    }
+  </style>
+</head>
 
-              <div class="progress-bar">
-                <div></div>
-              </div>
-            </div>
+<body class="text-slate-200 min-h-screen">
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="sticky top-4 z-50">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="bg-white/90 backdrop-blur-md rounded-full shadow-lg">
+        <div class="flex items-center justify-between px-6 py-3">
+
+          <img src="{% static 'bg removed.png' %}" class="h-10" alt="Logo" />
+
+          <nav class="hidden md:flex gap-8 text-slate-700 font-medium">
+            <a href="{% url 'home' %}" class="hover:text-black">Home</a>
+            <a href="{% url 'upload' %}" class="hover:text-black">Upload</a>
+            <a href="{% url 'results' %}" class="hover:text-black">Results</a>
+            <a href="{% url 'admin_dashboard' %}" class="hover:text-black">Admin</a>
+          </nav>
+
+          <div class="flex gap-3">
+            <a href="{% url 'login' %}" class="login-btn">
+              <span>Login</span>
+            </a>
+            <a href="{% url 'signup' %}" class="primary-btn">
+              <span>Get Started</span>
+            </a>
           </div>
 
-          <!-- PASTE SECTION -->
-          <div id="pasteSection" class="hidden">
-            <textarea
-              id="emailTextarea"
-              class="paste-textarea"
-              placeholder="Please paste your emails here (one per line)"
-            ></textarea>
-
-            <p id="emailCount" class="email-count">0 emails detected</p>
-          </div>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="card-footer">
-          <div class="job-id-box">
-            <p class="job-id-label">JOB ID</p>
-            <p id="jobId" class="job-id-value">—</p>
-          </div>
-
-          <button class="start-btn" id="startVerificationBtn">
-            Start Verification
-            <span class="material-symbols-outlined">arrow_forward</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- FEATURES -->
-      <div class="grid md:grid-cols-3 gap-6 mt-12">
-        <div class="feature">
-          <span class="material-symbols-outlined">shield</span>
-          <h3>Enterprise Security</h3>
-          <p>Your data is encrypted at rest and in transit.</p>
-        </div>
-        <div class="feature">
-          <span class="material-symbols-outlined">check_circle</span>
-          <h3>99.9% Accuracy</h3>
-          <p>Multi-step verification ensures deliverability.</p>
-        </div>
-        <div class="feature">
-          <span class="material-symbols-outlined">bolt</span>
-          <h3>Real-time Results</h3>
-          <p>Watch your list get cleaned in real-time.</p>
         </div>
       </div>
-    </main>
+    </div>
+  </header>
 
-    <script src="{% static 'js/upload.js' %}"></script>
-  </body>
+  <!-- ================= MAIN ================= -->
+  <main class="max-w-4xl mx-auto px-6 py-20">
+
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-bold text-[#f5deb3] mb-2">
+        Upload Email List
+      </h1>
+      <p class="text-slate-400">
+        Upload a CSV/TXT file or paste email addresses to begin verification.
+      </p>
+    </div>
+
+
+
+    <!-- ================= UPLOAD CARD ================= -->
+    <div class="bg-[#fafafa] rounded-2xl shadow-xl p-8 text-slate-800">
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+
+        <!-- Upload Box -->
+        <div id="uploadBox" onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-slate-300 rounded-xl p-14 text-center cursor-pointer
+         hover:border-[#f5deb3] hover:bg-[#fffaf0] transition">
+
+          <div id="uploadContent">
+            <div class="text-4xl mb-4">☁️</div>
+            <p class="font-semibold mb-1">Click to upload or drag & drop</p>
+            <p class="text-sm text-slate-500">CSV or TXT (max 50MB)</p>
+          </div>
+
+          <input id="fileInput" name="email_file" type="file" accept=".csv,.txt" class="hidden"
+            onchange="showFileName(this)" onclick="this.value=null" />
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between mt-8">
+          <p class="text-sm text-slate-500">JOB ID: —</p>
+
+          <button type="submit" class="uiverse-btn">
+            <span>Start Verification →</span>
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-[#020617] text-white py-8">
+    <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 px-6">
+
+      <!-- Footer Text -->
+      <p class="text-sm text-slate-300">&copy; 2026 Graphura · Email Verification Platform</p>
+
+      <!-- Social Icons -->
+      <div class="flex gap-4">
+
+        <!-- Facebook -->
+        <a href="https://www.facebook.com/share/19nKAMTopZ/" target="_blank" class="social-card">
+          <span>Facebook</span>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M22 12a10 10 0 10-11.5 9.9v-7h-2v-3h2V9.5c0-2 1.2-3.1 3-3.1.9 0 1.8.1 1.8.1v2h-1c-1 0-1.3.6-1.3 1.2V12h2.3l-.4 3h-1.9v7A10 10 0 0022 12z" />
+          </svg>
+        </a>
+
+        <!-- Twitter -->
+        <a href="https://share.google/w9KeZZ72v8KQxGpFn" target="_blank" class="social-card">
+          <span>Twitter</span>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M23 3a10.9 10.9 0 01-3.1 1.5A4.5 4.5 0 0012 7v1A10.7 10.7 0 013 4s-4 9 5 13a11.6 11.6 0 01-7 2c9 5 20 0 20-11v-1a7.7 7.7 0 002-2z" />
+          </svg>
+        </a>
+        
+        <!-- LinkedIn -->
+        <a href="https://www.linkedin.com/company/graphura-india-private-limited/" target="_blank" class="social-card">
+          <span>LinkedIn</span>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M4.98 3.5a2.5 2.5 0 11-.01 5 2.5 2.5 0 01.01-5zM3 9h4v12H3zM9 9h3.6v1.71h.05c.5-.95 1.72-1.95 3.55-1.95 3.8 0 4.5 2.5 4.5 5.76V21H16v-5.59c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94V21H9V9z" />
+          </svg>
+        </a>
+
+        <!-- Instagram -->
+        <a href="https://www.instagram.com/graphura.in" target="_blank" class="social-card">
+          <span>Instagram</span>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.9.3 2.3.5a4.6 4.6 0 011.7 1.1 4.6 4.6 0 011.1 1.7c.2.4.4 1.1.5 2.3.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.9-.5 2.3a4.6 4.6 0 01-1.1 1.7 4.6 4.6 0 01-1.7 1.1c-.4.2-1.1.4-2.3.5-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.9-.3-2.3-.5a4.6 4.6 0 01-1.7-1.1 4.6 4.6 0 01-1.1-1.7c-.2-.4-.4-1.1-.5-2.3-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.3-1.9.5-2.3a4.6 4.6 0 011.1-1.7 4.6 4.6 0 011.7-1.1c.4-.2 1.1-.4 2.3-.5C8.4 2.2 8.8 2.2 12 2.2zm0 3.6a6.2 6.2 0 100 12.4 6.2 6.2 0 000-12.4zm0 10.2a4 4 0 110-8 4 4 0 010 8zm6.4-10.9a1.4 1.4 0 11-2.8 0 1.4 1.4 0 012.8 0z" />
+          </svg>
+        </a>
+
+
+      </div>
+    </div>
+  </footer>
+
+
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const uploadContent = document.getElementById("uploadContent");
+
+    fileInput.addEventListener("change", function () {
+      if (fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+
+        uploadContent.innerHTML = `
+        <div class="text-4xl mb-3">📄</div>
+        <p class="font-semibold">${fileName}</p>
+        <p class="text-sm text-slate-500">Ready to upload</p>
+      `;
+      }
+    });
+  </script>
+
+
+
+
+</body>
+
 </html>
